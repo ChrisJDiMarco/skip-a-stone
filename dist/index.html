@@ -37,12 +37,13 @@
         <div class="utilities">
           <span class="conditions">≋ &nbsp; CALM WATER</span
           ><button
+            id="music" class="icon" aria-label="Play Yoga Sounds radio" aria-pressed="false" title="Yoga Sounds by FluxFM">♪</button><button
             id="sound"
             class="icon"
-            aria-label="Turn sound on"
+            aria-label="Turn sound off"
             title="Sound"
           >
-            ♪<span class="off">/</span></button
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg><span class="off" hidden>/</span></button
           ><button
             id="settings"
             class="icon"
@@ -71,18 +72,15 @@
         >
       </button>
       <div id="feedback" role="status" aria-live="polite"></div>
-      <section class="stones" aria-label="Choose your stone">
-        <button data-stone="flat" aria-pressed="true">
-          <span class="stone-art flat"></span><strong>FLAT</strong
-          ><small>Forgiving</small></button
-        ><button data-stone="thin" aria-pressed="false">
-          <span class="stone-art thin"></span><strong>THIN</strong
-          ><small>More skips</small></button
-        ><button data-stone="heavy" aria-pressed="false">
-          <span class="stone-art heavy"></span><strong>HEAVY</strong
-          ><small>More distance</small>
-        </button>
-      </section>
+      <section class="stones" aria-label="Choose your stone"><div class="stone-list" aria-label="Scroll to explore seven stones">
+<button data-stone="flat" aria-pressed="true" aria-haspopup="dialog"><span class="stone-art"><img alt="flat stone" /></span><strong>FLAT</strong><small>Forgiving</small></button>
+<button data-stone="thin" aria-pressed="false" aria-haspopup="dialog"><span class="stone-art"><img alt="thin stone" /></span><strong>THIN</strong><small>More skips</small></button>
+<button data-stone="heavy" aria-pressed="false" aria-haspopup="dialog"><span class="stone-art"><img alt="heavy stone" /></span><strong>HEAVY</strong><small>More distance</small></button>
+<button data-stone="jade" aria-pressed="false" aria-haspopup="dialog"><span class="stone-art"><img alt="jade stone" /></span><strong>JADE</strong><small>Easy control</small></button>
+<button data-stone="quartz" aria-pressed="false" aria-haspopup="dialog"><span class="stone-art"><img alt="quartz stone" /></span><strong>QUARTZ</strong><small>Higher bounces</small></button>
+<button data-stone="obsidian" aria-pressed="false" aria-haspopup="dialog"><span class="stone-art"><img alt="obsidian stone" /></span><strong>OBSIDIAN</strong><small>Precision skips</small></button>
+<button data-stone="granite" aria-pressed="false" aria-haspopup="dialog"><span class="stone-art"><img alt="granite stone" /></span><strong>GRANITE</strong><small>Steady pace</small></button>
+</div><span class="stone-scroll-hint">Scroll to explore · 7 stones ↔</span></section>
       <section id="throwPanel" aria-label="Throw controls">
         <div class="glass control-deck">
           <div class="meter power-meter">
@@ -163,6 +161,13 @@
         <p>Finding a quiet spot…</p>
       </div>
       <div id="toast" role="status" aria-live="polite" hidden></div>
+      <audio id="radio" preload="none"></audio>
+      <dialog id="rockDialog" aria-labelledby="rockName">
+        <button class="close" aria-label="Close stone preview">×</button>
+        <div class="rock-heading"><p class="eyebrow">FROM THE SHORE</p><h2 id="rockName">Flat slate</h2><span id="rockTrait">Forgiving</span></div>
+        <div id="rockViewport" tabindex="0" role="img" aria-label="3D stone preview. Drag to rotate, or use arrow keys. Home resets the view."></div>
+        <div class="rock-footer"><div><p class="rotate-hint">Drag to turn it over <span>· arrow keys also work</span></p><p id="rockDescription"></p></div><button id="useRock" class="primary">Use this stone ↗</button></div>
+      </dialog>
       <dialog id="settingsDialog">
         <button class="close" aria-label="Close settings">×</button>
         <p class="eyebrow">A LITTLE PRACTICE GOES A LONG WAY</p>
@@ -185,7 +190,7 @@
           >Stationary camera<input id="still" type="checkbox"
         /></label>
         <p class="keyboard">
-          <b>Keyboard</b><br />1 / 2 / 3 choose a stone · ← → aim · ↑ ↓ power<br />Space
+          <b>Keyboard</b><br />1–7 choose a stone · ← → aim · ↑ ↓ power<br />Space
           prepares, then throws · Esc cancels or pauses
         </p>
         <p class="fine">
@@ -193,6 +198,7 @@
           same conditions. Boat points reward targets; skip records stay
           separate. Records stay on this device.
         </p>
+        <p class="fine">Music: <a href="https://filtermusic.net/yoga-sounds-by-fluxfm" target="_blank" rel="noopener noreferrer">Yoga Sounds by FluxFM</a>. The music button starts live radio; sound effects have their own toggle.</p>
         <button class="primary dark close-settings">Back to the lake</button>
       </dialog>
       <dialog id="shareDialog">

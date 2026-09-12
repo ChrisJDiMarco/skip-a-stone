@@ -9,7 +9,12 @@ export const STONES = Object.freeze({
     tolerance: 0.85,
     lift: 0.045,
   },
+  jade: { retention: 0.901, stabilityLoss: 0.07, tolerance: 1.12, lift: 0.057 },
+  quartz: { retention: 0.916, stabilityLoss: 0.09, tolerance: 0.95, lift: 0.073 },
+  obsidian: { retention: 0.926, stabilityLoss: 0.048, tolerance: 0.58, lift: 0.048 },
+  granite: { retention: 0.92, stabilityLoss: 0.083, tolerance: 1.05, lift: 0.062 },
 });
+export const roundFinished = (replay, playTime) => !!replay && playTime > replay.duration + 0.22;
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export function shot(input) {
   if (

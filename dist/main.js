@@ -1,6 +1,10 @@
+import { loadRockAssets } from "./rocks.js";
+import { createRockInspector } from "./rock-inspector.js";
+import { setupRadio } from "./radio.js";
 import { createLake } from "./scene.js";
 import {
   STONES,
+  roundFinished,
   clamp,
   shot,
   simulate,
@@ -32,11 +36,11 @@ let state = "loading",
   drag = null,
   toastTimer,
   storageOK = true,
-  muted = true,
+  muted = false,
   audio = null,
   pausedForDialog = false;
 const frameTimes = [];
-let lake;
+let lake, inspector;
 function toast(message) {
   $("#toast").textContent = message;
   $("#toast").hidden = false;
@@ -322,6 +326,23 @@ function splashSound(energy) {
     gain.disconnect();
   };
 }
+function pointSound(points) {
+  if (muted || !audio || audio.state !== "running") return;
+  const start = audio.currentTime;
+  [660, 880, points >= 200 ? 1320 : 1100].forEach((frequency, i) => {
+    const oscillator = audio.createOscillator(), gain = audio.createGain();
+    const at = start + i * 0.075;
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(frequency, at);
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(0.12, at + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.001, at + 0.18);
+    oscillator.connect(gain).connect(audio.destination);
+    oscillator.start(at);
+    oscillator.stop(at + 0.19);
+    oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+  });
+}
 $("#launch").addEventListener("pointerdown", (e) => {
   if (e.button !== 0 || drag) return;
   e.preventDefault();
@@ -351,7 +372,7 @@ $("#launch").addEventListener("pointerup", (e) => {
   if ($("#launch").hasPointerCapture(e.pointerId))
     $("#launch").releasePointerCapture(e.pointerId);
   if (moved) release();
-  else reset();
+  // A click enters preparation; only a deliberate drag releases the stone.
 });
 for (const type of ["pointercancel", "lostpointercapture"])
   $("#launch").addEventListener(type, () => {
@@ -370,7 +391,7 @@ $("#power").addEventListener("input", (e) =>
   setPower(Number(e.target.value) / 100),
 );
 $$("[data-stone]").forEach((b) =>
-  b.addEventListener("click", () => selectStone(b.dataset.stone)),
+  b.addEventListener("click", () => inspector?.open(b.dataset.stone)),
 );
 $("#throw").onclick = () => {
   if (state === "paused") cancel();
@@ -396,11 +417,11 @@ addEventListener("keydown", (e) => {
     return;
   }
   if (
-    ["1", "2", "3"].includes(k) &&
+    /^[1-7]$/.test(k) &&
     !challenge &&
     ["ready", "result"].includes(state)
   ) {
-    selectStone(["flat", "thin", "heavy"][Number(k) - 1]);
+    selectStone(Object.keys(STONES)[Number(k) - 1]);
     return;
   }
   if (["ready", "preparing"].includes(state)) {
@@ -541,6 +562,8 @@ function gameState() {
     skips: Number($("#score").textContent),
     best: best()?.skips ?? null,
     challenge: challenge?.name ?? null,
+    sound: muted ? "off" : "on",
+    audioState: audio?.state ?? "not-started",
     storage: storageOK ? "device" : "session",
     fps: Math.round(fps),
     p95FrameMs: Math.round(sorted[Math.floor(sorted.length * 0.95)] || 0),
@@ -572,7 +595,7 @@ function registerTools() {
       inputSchema: {
         type: "object",
         properties: {
-          stone: { enum: ["flat", "thin", "heavy"] },
+          stone: { enum: Object.keys(STONES) },
           mode: { enum: ["standard", "relaxed"] },
           power: { type: "number", minimum: 0.1, maximum: 1 },
           heading: { type: "number", minimum: -0.4, maximum: 0.7 },
@@ -672,7 +695,10 @@ function registerTools() {
   addEventListener("pagehide", () => lifecycle.abort(), { once: true });
 }
 try {
-  lake = await createLake($("#view"));
+  const rocks = await loadRockAssets();
+  lake = await createLake($("#view"), rocks);
+  inspector = createRockInspector(rocks, selectStone);
+  setupRadio(toast);
   $("#loading").remove();
   initChallenge();
   reset();
@@ -737,7 +763,7 @@ try {
           .slice(0, i + 1)
           .reduce((sum, h) => sum + h.points, 0);
         $("#feedback").textContent = `Boat hit! +${hit.points}`;
-        splashSound(35);
+        pointSound(hit.points);
       }
       const sampleIndex = Math.min(
         replay.samples.length - 1,
@@ -750,7 +776,7 @@ try {
       $("#flightAngle").textContent =
         `${Math.round(18 + replay.input.tilt * 14)}°`;
       $("#flightSkips").textContent = $("#score").textContent;
-      if (playTime > Math.max(replay.duration, ghost?.duration ?? 0) + 0.65)
+      if (roundFinished(replay, playTime))
         finish();
     }
     const coords = lake.render(
@@ -781,7 +807,7 @@ try {
       $("#ghostLabel").hidden = !coords.ghost;
       if (coords.ghost && ghost) {
         $("#ghostLabel").textContent =
-          `${ghostName()} · ${ghost.events.filter((e) => e.kind === "skip" && e.t <= playTime).length}`;
+          `${ghostName()} · ${state === "result" ? ghost.skips : ghost.events.filter((e) => e.kind === "skip" && e.t <= playTime).length}`;
         $("#ghostLabel").style.left = `${coords.ghost.x}px`;
         $("#ghostLabel").style.top = `${coords.ghost.y - 18}px`;
         $("#ghostLabel").hidden = !coords.ghost.visible;

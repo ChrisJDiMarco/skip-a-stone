@@ -136,3 +136,27 @@ test("moving boats award points once per actual contact and misses earn zero", (
   assert.deepEqual(hit, simulate(decodeChallenge(encodeChallenge(base)).shot));
   assert.notDeepEqual(hit.hits, simulate({ ...base, phase: 10 }).hits);
 });
+
+test('all seven stones have distinct playable throws and share exact replays', async () => {
+  const { STONES } = await import('../dist/simulation.js');
+  assert.equal(Object.keys(STONES).length, 7);
+  const results = new Set();
+  for (const stone of Object.keys(STONES)) {
+    const input = shot({ ...sample, stone, body: 0, phase: 0 });
+    const replay = simulate(input);
+    assert.ok(replay.skips > 0 && replay.duration < 15.01);
+    assert.deepEqual(replay, simulate(decodeChallenge(encodeChallenge(input)).shot));
+    results.add(`${replay.skips}:${replay.distanceCm}`);
+  }
+  assert.equal(results.size, 7);
+});
+
+test('short throws finish independently of a longer personal-best ghost', async () => {
+  const { roundFinished } = await import('../dist/simulation.js');
+  const current = simulate({ ...sample, tilt: .95 });
+  const ghost = simulate(sample);
+  assert.ok(ghost.duration > current.duration + .3);
+  assert.equal(roundFinished(current, current.duration), false);
+  assert.equal(roundFinished(current, current.duration + .23), true);
+  assert.equal(roundFinished(null, 10), false);
+});

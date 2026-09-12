@@ -1324,3 +1324,54 @@ body.flying .landing-number {
   }
 }
 .landing-splash{fill:none;stroke:#f2ffff;stroke-width:1.4;stroke-linecap:round;opacity:.8}.landing-outer{stroke-width:2;fill:#c8f4ff12}
+
+/* A quiet guide, visible only once a throw is being prepared. */
+.trajectory-guide { opacity: .82; }
+.guide-arc { animation: guide-flow 1.8s linear infinite; }
+@keyframes guide-flow { to { stroke-dashoffset: -27; } }
+body:not(.preparing) #aimReadout { display: none; }
+body.paused .guide-arc { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .guide-arc { animation: none; } }
+#music[aria-pressed="true"] { background: #d9ecdb55; box-shadow: inset 0 0 0 1px #efffdcaa; }
+#music[data-status="loading"] { opacity: .55; }
+.stones { width: min(310px, calc((100vw - 680px) / 2 - 50px)); padding: 8px 6px 4px; gap: 0; display: block; border: 1px solid transparent; border-radius: 18px; transition: border-color .2s, background .2s; }
+.stones:hover, .stones:focus-within { border-color: #f0f7e9aa; background: #163c4455; }
+.stone-list { display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #f0f2d5aa transparent; padding: 3px 3px 7px; scroll-snap-type: x proximity; }
+.stones button { flex: 0 0 88px; width: 88px; scroll-snap-align: start; }
+.stones .stone-art { height: 60px; background: #e4e1d7b3; overflow: hidden; }
+.stones .stone-art::after { display: none; }
+.stones .stone-art img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.stones button:hover .stone-art, .stones button:focus-visible .stone-art { border-color: #fff; background: #edf2ddd9; }
+.stones small { font-size: 11px; white-space: nowrap; }
+.stones strong { font-size: 12px; letter-spacing: .04em; }
+.stone-scroll-hint { display: block; font-size: 11px; opacity: .65; text-align: center; margin-top: 1px; }
+.stones:hover .stone-scroll-hint, .stones:focus-within .stone-scroll-hint { opacity: 1; }
+#rockDialog { width: min(920px, calc(100vw - 40px)); max-width: 920px; max-height: calc(100dvh - 32px); padding: 0; overflow: auto; color: #f3f2e8; background: radial-gradient(ellipse at 50% 38%, #355762, #112e38 75%); border: 1px solid #c9dde266; }
+#rockDialog .close { color: #f3f2e8; z-index: 2; width: 44px; height: 44px; }
+.rock-heading { position: absolute; top: 30px; left: 36px; pointer-events: none; z-index: 1; }
+.rock-heading .eyebrow { color: #aac4c6; font-size: 11px; margin: 0; letter-spacing: .16em; }
+#rockDialog h2 { font-size: clamp(28px, 4vw, 42px); margin: 5px 0 10px; }
+#rockTrait { color: #cee6ce; font-size: 13px; border: 1px solid #cee6ce55; border-radius: 20px; padding: 5px 10px; }
+#rockViewport { width: 100%; height: min(53vh, 490px); min-height: 280px; cursor: grab; touch-action: none; }
+#rockViewport.dragging { cursor: grabbing; }
+#rockViewport canvas { display: block; width: 100%; height: 100%; }
+#rockViewport:focus-visible { outline: 2px solid #e0eecd; outline-offset: -4px; }
+.rock-footer { display: flex; align-items: center; gap: 30px; border-top: 1px solid #d5e1e222; padding: 22px 36px 30px; background: #09253166; }
+#rockDialog .rotate-hint { color: #e5ebd9; font-size: 14px; margin: 0 0 8px; }
+.rotate-hint span { color: #9ab5bb; }
+#rockDescription { color: #b9cdd0; max-width: 530px; margin: 0; font-size: 14px; }
+#useRock { flex-shrink: 0; white-space: nowrap; }
+@media(max-width:1100px) { .stones { width: calc(23vw - 30px); transform: none; } }
+@media(max-width:760px) {
+ .stones { width: calc(100vw - 164px); left: 8px; bottom: 4px; transform: none; padding: 5px 3px 0; }
+ .stones button { width: 60px; flex-basis: 60px; }
+ .stones .stone-art { height: 39px; margin-bottom: 4px; }
+ .stones strong { font-size: 9px; } .stones small { display: none; }
+ .stone-scroll-hint { font-size: 9px; } .stone-list { padding-bottom: 3px; }
+ .utilities { gap: 4px; } .utilities .icon { width: 32px; height: 32px; }
+ #rockDialog { width: calc(100vw - 20px); }
+ .rock-heading { position: relative; top: auto; left: auto; padding: 20px 22px 0; }
+ #rockViewport { height: 34dvh; min-height: 220px; }
+ .rock-footer { padding: 18px 22px; gap: 15px; flex-direction: column; align-items: stretch; }
+ .rotate-hint span { display: none; }
+}

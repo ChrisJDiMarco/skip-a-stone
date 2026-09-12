@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { createBoats } from "./boats.js";
 import { createTrajectoryGuide } from "./trajectory.js";
 import { positionAt, simulate, targetPosition } from "./simulation.js";
-export async function createLake(container) {
+export async function createLake(container, rocks) {
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: false,
@@ -146,27 +146,8 @@ export async function createLake(container) {
     r.rotation.set(random(), random() * 6, random());
     scene.add(r);
   }
-  const geo = new THREE.SphereGeometry(1, 64, 32);
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i),
-      y = pos.getY(i),
-      z = pos.getZ(i);
-    const f = 1 + Math.sin(x * 18 + z * 12) * 0.034;
-    pos.setXYZ(i, x * f, y * f, z * f);
-  }
-  geo.computeVertexNormals();
-  const stone = new THREE.Mesh(
-    geo,
-    new THREE.MeshPhysicalMaterial({
-      color: 0x657577,
-      roughness: 0.24,
-      metalness: 0.04,
-      clearcoat: 1,
-      clearcoatRoughness: 0.16,
-      map: bed,
-    }),
-  );
+  const geo = rocks.flat.geometry;
+  const stone = new THREE.Mesh(geo, rocks.flat.material);
   stone.scale.set(0.37, 0.065, 0.25);
   stone.visible = false;
   scene.add(stone);
@@ -480,7 +461,7 @@ export async function createLake(container) {
       label.visible = labelDistance > 5;
       label.scale.setScalar(Math.min(1, labelDistance / 14));
     }
-    const guiding = ["ready", "preparing"].includes(state);
+    const guiding = state === "preparing";
     if (guiding) {
       const key = `${heading.toFixed(3)}:${power.toFixed(3)}:${selected}`;
       if (key !== previewKey) {
@@ -497,7 +478,7 @@ export async function createLake(container) {
       }
     }
     aim.visible = false;
-    aimArrow.visible = ["ready", "preparing"].includes(state);
+    aimArrow.visible = guiding;
     aimArrow.position.set(
       -3 + Math.sin(heading) * 3,
       0.15,
@@ -516,7 +497,7 @@ export async function createLake(container) {
     if (ghostTrail.visible)
       ghostTrailGeometry.setDrawRange(
         0,
-        Math.min(ghostReplay.samples.length, Math.floor(playTime * 120) + 1),
+        state === "result" ? ghostReplay.samples.length : Math.min(ghostReplay.samples.length, Math.floor(playTime * 120) + 1),
       );
     if (preparing) {
       const a = aim.geometry.attributes.position;
@@ -531,6 +512,9 @@ export async function createLake(container) {
       d.setX(1, Math.hypot(a.getX(1) - a.getX(0), a.getZ(1) - a.getZ(0)));
       d.needsUpdate = true;
     }
+    const appearance = rocks[selected];
+    stone.geometry = appearance.geometry;
+    stone.material = appearance.material;
     if (current && ["flying", "result", "paused"].includes(state)) {
       const displayTime =
         state === "result"
@@ -545,22 +529,21 @@ export async function createLake(container) {
         playTime < current.duration + 0.15;
       stone.position.set(p.x, p.y, p.z);
       stone.rotation.set(0.035, playTime * 15, 0.025);
-      stone.material.color.set(selected === "heavy" ? 0xada28a : 0x718083);
       const size = flight
         ? 0.9
         : 0.31 + camera.position.distanceTo(stone.position) * 0.012;
       stone.scale.set(
         size,
-        size * (selected === "heavy" ? 0.32 : 0.17),
-        size * 0.68,
+        size,
+        size,
       );
     } else {
       stone.visible = ["ready", "preparing"].includes(state);
       stone.position.set(-3, 0.13, 3);
       stone.scale.set(
         innerWidth < 760 ? 0.72 : 0.48,
-        0.1,
-        innerWidth < 760 ? 0.5 : 0.34,
+        innerWidth < 760 ? 0.72 : 0.48,
+        innerWidth < 760 ? 0.72 : 0.48,
       );
       stone.rotation.set(0.04, 0.4, 0.08);
     }
@@ -599,7 +582,7 @@ export async function createLake(container) {
       for (const ev of r.events) {
         if (index >= effects.length) break;
         const fx = effects[index++],
-          age = playTime - ev.t;
+          age = (state === "result" && isGhost ? r.duration + .025 : playTime) - ev.t;
         fx.group.visible = age >= 0 && age < 4.5;
         if (!fx.group.visible) continue;
         fx.group.position.set(ev.x + (isGhost ? 1.4 : 0), 0, ev.z);
