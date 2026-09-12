@@ -111,9 +111,13 @@ export async function createLake(container, rocks) {
  lakeColor+=vec3(1.,.74,.38)*spec*1.2;
  lakeColor+=vec3(1.,.67,.3)*pow(clamp((n.y+.23)*2.6,0.,1.),5.)*sunline*.5;
  lakeColor+=vec3(.05,.11,.12)*(waveSlope*.16+n.y*.25);
- float horizonFade=smoothstep(65.,190.,length(wp.xz-cameraPosition.xz));
- lakeColor=mix(lakeColor,vec3(.32,.42,.45),horizonFade*.55);
- color=mix(color,lakeColor,immersion*(1.-horizonFade));
+ // The distant lake is a screen-fixed capture. A world-distance fade collapses
+ // to a thin stripe from this low camera, so blend over a broad screen band.
+ // Its upper edge matches the backdrop exactly: no refraction, glints, or tint.
+ vec3 plate=mix(texture2D(land,baseUV).rgb,texture2D(resultMap,baseUV).rgb,resultMix);
+ float nearWater=1.-smoothstep(.32,.60,screen.y);
+ vec3 flightWater=mix(plate,lakeColor,nearWater);
+ color=mix(color,flightWater,immersion);
  gl_FragColor=vec4(color,1.);\n #include <colorspace_fragment>\n}`,
     }),
   );
