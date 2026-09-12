@@ -90,7 +90,8 @@ export function createRockInspector(assets, onChoose) {
   });
   dialog.addEventListener('close', endDrag);
   document.querySelector('#useRock').onclick = () => { onChoose(selected); dialog.close(); };
-  strip.addEventListener('wheel', e => {
+  strip.closest('.stones').addEventListener('wheel', e => {
+    if (e.ctrlKey) return;
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     if (!delta) return;
     e.preventDefault();

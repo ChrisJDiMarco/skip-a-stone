@@ -1336,7 +1336,7 @@ body.paused .guide-arc { animation-play-state: paused; }
 #music[data-status="loading"] { opacity: .55; }
 .stones { width: min(310px, calc((100vw - 680px) / 2 - 50px)); padding: 8px 6px 4px; gap: 0; display: block; border: 1px solid transparent; border-radius: 18px; transition: border-color .2s, background .2s; }
 .stones:hover, .stones:focus-within { border-color: #f0f7e9aa; background: #163c4455; }
-.stone-list { display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #f0f2d5aa transparent; padding: 3px 3px 7px; scroll-snap-type: x proximity; }
+.stone-list { display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #f0f2d5aa transparent; padding: 3px 3px 7px; }
 .stones button { flex: 0 0 88px; width: 88px; scroll-snap-align: start; }
 .stones .stone-art { height: 60px; background: #e4e1d7b3; overflow: hidden; }
 .stones .stone-art::after { display: none; }
