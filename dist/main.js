@@ -145,7 +145,6 @@ function setState(value) {
   $("#game").dataset.state = value;
   $("#result").hidden = value !== "result";
   $("#launch").disabled = !["ready", "preparing"].includes(value);
-  $("#power").disabled = !["ready", "preparing"].includes(value);
   $$("[data-stone]").forEach(
     (b) => (b.disabled = !!challenge || !["ready", "result"].includes(value)),
   );
@@ -160,13 +159,22 @@ function setState(value) {
   $("#throw").disabled = value === "flying";
   $("#timing").disabled = !!challenge;
 }
+const angleWindow = () => 0.30 - power * 0.20;
+const bodyWindow = () => 0.30 - power * 0.18;
+const pullStrength = () => power < 0.4 ? "Gentle" : power < 0.78 ? "Balanced" : "Powerful";
 function setPower(v) {
   power = clamp(v, 0.1, 1);
-  $("#power").value = String(Math.round(power * 100));
-  $("#powerValue").textContent = `${Math.round(power * 100)}%`;
-  const band = 0.23 - power * 0.12;
-  $("#sweet").style.left = `${50 - band * 50}%`;
-  $("#sweet").style.width = `${band * 100}%`;
+  for (const [selector, band] of [["#sweet", angleWindow()], [".body-sweet", bodyWindow()]]) {
+    $(selector).style.left = `${50 - band * 50}%`;
+    $(selector).style.width = `${band * 100}%`;
+  }
+  const strength = pullStrength();
+  $("#pullStrengthDescription").textContent = `${strength} pull. Use up and down arrows to change power, left and right to aim. Release when angle and body reach green.`;
+  for (const selector of ["#launch", "#throw"]) $(selector).setAttribute("aria-describedby", "pullStrengthDescription");
+  $$("[data-pull-level]").forEach(node => node.dataset.active = String(node.dataset.pullLevel === strength.toLowerCase()));
+  $("#pullTradeoff").textContent = strength === "Gentle" ? "Shorter throw · easier timing"
+    : strength === "Balanced" ? "Steady distance · forgiving timing" : "More distance · precise timing";
+  $("#calmAim").style.setProperty("--timing-window", `${angleWindow() * 100}%`);
 }
 function selectStone(v) {
   if (typeof v !== "string" || !Object.hasOwn(STONES, v))
@@ -243,7 +251,7 @@ function prepare() {
 function currentTilt(now) {
   const cycle = mode === "relaxed" ? 3200 : 1600;
   const raw = Math.sin(((now - prepStart) / cycle) * Math.PI * 2 - 1.2);
-  const band = 0.23 - power * 0.12;
+  const band = angleWindow();
   return {
     raw,
     tilt:
@@ -255,7 +263,7 @@ function currentTilt(now) {
 function currentBody(now) {
   const cycle = mode === "relaxed" ? 4300 : 2450;
   const raw = Math.sin(((now - prepStart) / cycle) * Math.PI * 2 - 0.8);
-  const band = 0.22;
+  const band = bodyWindow();
   return {
     raw,
     body:
@@ -440,9 +448,6 @@ $("#launch").addEventListener("click", (e) => {
     else prepare();
   }
 });
-$("#power").addEventListener("input", (e) =>
-  setPower(Number(e.target.value) / 100),
-);
 $$("[data-stone]").forEach((b) =>
   b.addEventListener("click", () => inspector?.open(b.dataset.stone)),
 );
@@ -461,7 +466,9 @@ addEventListener("keydown", (e) => {
     cancel();
     return;
   }
-  if (/^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(e.target.tagName)) return;
+  const adjustingThrow = ["launch", "throw"].includes(e.target.id)
+    && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(k);
+  if (!adjustingThrow && /^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(e.target.tagName)) return;
   if (k === " ") {
     e.preventDefault();
     if (state === "paused") cancel();
@@ -838,17 +845,18 @@ try {
         const aligned = tilt === 0 && body === 0;
         $("#calmAim").dataset.aligned = String(aligned);
         $("#calmAim").style.setProperty("--power", `${power * 100}%`);
-        $("#calmPower").textContent = `${Math.round(power * 100)}%`;
+        $("#calmPower").textContent = pullStrength();
         $("#calmAlignment").textContent = aligned ? "Release now" : "Time ● + ◆";
         // Map each timing window into the same central green band.
         const markerPosition = (raw, band) => {
           const magnitude = Math.abs(raw);
-          const offset = magnitude <= band ? magnitude / band * 0.18
-            : 0.18 + (magnitude - band) / (1 - band) * 0.82;
+          const window = angleWindow();
+          const offset = magnitude <= band ? magnitude / band * window
+            : window + (magnitude - band) / (1 - band) * (1 - window);
           return `${50 + Math.sign(raw) * offset * 50}%`;
         };
-        $("#calmAngleMarker").style.left = markerPosition(t.raw, 0.23 - power * 0.12);
-        $("#calmBodyMarker").style.left = markerPosition(alignment.raw, 0.22);
+        $("#calmAngleMarker").style.left = markerPosition(t.raw, angleWindow());
+        $("#calmBodyMarker").style.left = markerPosition(alignment.raw, bodyWindow());
       }
       $("#feedback").textContent =
         tilt === 0 && body === 0
@@ -914,6 +922,12 @@ try {
       $("#launch").style.top = `${coords.launch.y}px`;
       $("#launch").style.width = `${coords.launch.width}px`;
       $("#launch").style.height = `${coords.launch.height}px`;
+      if (state === "preparing" && !calmMode) {
+        const cue = $("#pullPower");
+        const half = cue.offsetWidth / 2;
+        cue.style.left = `${clamp(coords.launch.x, half + 12, innerWidth - half - 12)}px`;
+        cue.style.top = `${Math.max(80, coords.launch.y - coords.launch.height / 2 - cue.offsetHeight - 12)}px`;
+      }
       if (calmMode && state === "preparing") {
         const panel = $("#calmAim");
         const halfWidth = panel.offsetWidth / 2;

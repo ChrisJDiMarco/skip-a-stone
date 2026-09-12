@@ -1635,3 +1635,21 @@ body[data-calm="true"].preparing .guide-arc { stroke: #e1f1d8; stroke-width: 1.6
   .control-deck .meter label, .control-deck .meter-label { font-size: 9px; }
   .control-deck .meter small, .control-deck .timing-control-hint { font-size: 9px; }
 }
+
+/* Pull strength belongs to the stone; the bottom panel is timing only. */
+#throwPanel .control-deck { grid-template-columns: minmax(0, 1fr); }
+#throwPanel { width: min(440px, 38vw); }
+#pullPower { display: none; position: absolute; transform: translateX(-50%); padding: 10px 12px; border-radius: 14px; background: #203c35e6; border: 1px solid #d4e9c73d; pointer-events: none; color: #e3eddc; z-index: 5; max-width: calc(100vw - 24px); }
+body.preparing #pullPower { display: block; }
+.pull-levels { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+.pull-levels span { opacity: .48; padding-bottom: 4px; border-bottom: 2px solid transparent; }
+.pull-levels [data-active="true"] { opacity: 1; color: #d5efb5; border-bottom-color: #d5efb5; font-weight: 700; }
+#pullTradeoff { display: block; font-size: 10px; margin-top: 5px; color: #cbdbca; }
+.calm-sweet { width: var(--timing-window, 17%); left: calc(50% - var(--timing-window, 17%) / 2); }
+.calm-power-fill { display: none; }
+@media (max-width: 760px) {
+  #throwPanel { width: calc(100% - 24px); }
+  #throwPanel .meter-label { display: flex; align-items: center; }
+  #throwPanel .meter-label b { margin-top: 0; }
+  .pull-levels { font-size: 10px; }
+}
