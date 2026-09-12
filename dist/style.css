@@ -1418,3 +1418,25 @@ body.paused .guide-arc { animation-play-state: paused; }
   .stones .stone-art { height: 44px; }
   .stones small { display: none; }
 }
+
+/* Presentation preferences leave the stone's drag target interactive. */
+body[data-flight-trajectory="false"]:is(.flying, .paused, .result) .trajectory-guide {
+  display: none;
+}
+body[data-calm="true"] #game > :not(#view):not(header):not(#launch):not(#settingsDialog):not(#loading):not(script) {
+  display: none !important;
+}
+body[data-calm="true"] header > :not(.utilities),
+body[data-calm="true"] .utilities > :not(#settings),
+body[data-calm="true"] #launch > *,
+body[data-calm="true"] .trajectory-guide {
+  display: none !important;
+}
+body[data-calm="true"] #launch {
+  background: transparent;
+  box-shadow: none;
+  border-color: transparent;
+}
+body[data-calm="true"] #settings {
+  display: inline-flex;
+}

@@ -426,6 +426,7 @@ export async function createLake(container, rocks) {
     power = 0.65,
     selected = "flat",
     targetTime = 0,
+    calmMode = false,
   ) {
     water.material.uniforms.time.value = t;
     viewMix += ((state === "result" ? 1 : 0) - viewMix) * 0.09;
@@ -435,7 +436,7 @@ export async function createLake(container, rocks) {
     const flight =
       current && ["flying", "paused"].includes(state) && !stationary;
     const desiredBlend = flight ? Math.min(1, playTime / 0.25) : 0;
-    cameraBlend += (desiredBlend - cameraBlend) * 0.13;
+    cameraBlend += (desiredBlend - cameraBlend) * (calmMode && state === "result" ? 0.045 : 0.13);
     if (!current || stationary) cameraBlend = 0;
     water.material.uniforms.immersion.value = cameraBlend;
     camera.aspect =
@@ -506,7 +507,7 @@ export async function createLake(container, rocks) {
       wake.material.opacity = 0.28 + Math.sin(boatTime * 3) * 0.06;
       sails.rotation.y = Math.sin(boatTime * 0.8 + target.offset) * 0.045;
       const labelDistance = camera.position.distanceTo(group.position);
-      label.visible = labelDistance > 5;
+      label.visible = !calmMode && labelDistance > 5;
       label.scale.setScalar(Math.min(1, labelDistance / 14));
     }
     const guiding = state === "preparing";
@@ -526,7 +527,7 @@ export async function createLake(container, rocks) {
       }
     }
     aim.visible = false;
-    aimArrow.visible = guiding;
+    aimArrow.visible = guiding && !calmMode;
     aimArrow.position.set(
       -3 + Math.sin(heading) * 3,
       0.15,
@@ -537,6 +538,7 @@ export async function createLake(container, rocks) {
       new THREE.Vector3(Math.sin(heading), 0, -Math.cos(heading)),
     );
     ghostTrail.visible = !!(
+      !calmMode &&
       current &&
       ghostReplay &&
       !flight &&
@@ -608,6 +610,7 @@ export async function createLake(container, rocks) {
           : playTime,
       );
       ghost.visible =
+        !calmMode &&
         !flight &&
         ((state === "result" && ghostReplay.skips > 0) ||
           playTime < ghostReplay.duration + 0.15);
@@ -621,7 +624,7 @@ export async function createLake(container, rocks) {
       [ghostReplay, true],
     ]) {
       if (
-        (flight && isGhost) ||
+        ((flight || calmMode) && isGhost) ||
         !r ||
         !current ||
         !["flying", "result", "paused"].includes(state)

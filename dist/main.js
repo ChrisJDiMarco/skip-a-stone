@@ -41,6 +41,19 @@ let state = "loading",
   pausedForDialog = false;
 const frameTimes = [];
 let lake, inspector;
+let calmMode = false, flightTrajectory = true, calmResultTime = 0;
+try {
+  const preferences = JSON.parse(localStorage.getItem("skip-stone-view-v1") || "{}");
+  calmMode = preferences?.calmMode === true;
+  flightTrajectory = preferences?.flightTrajectory !== false;
+} catch {}
+function applyViewPreferences() {
+  document.body.dataset.calm = String(calmMode);
+  document.body.dataset.flightTrajectory = String(flightTrajectory);
+  $("#calmMode").checked = calmMode;
+  $("#flightTrajectory").checked = flightTrajectory;
+}
+applyViewPreferences();
 function toast(message) {
   $("#toast").textContent = message;
   $("#toast").hidden = false;
@@ -156,6 +169,7 @@ function initChallenge() {
   );
 }
 function reset() {
+  calmResultTime = 0;
   drag = null;
   delete $("#game").dataset.pull;
   replay = null;
@@ -276,7 +290,8 @@ function finish() {
   $("#resultDetail").textContent =
     `${Math.abs(replay.input.tilt) < 0.08 ? "Clean release" : Math.abs(replay.input.tilt) < 0.4 ? "Nearly level" : "Try a flatter release"} · ${Math.round(replay.input.power * 100)}% · ${(replay.distanceCm / 100).toFixed(1)} m`;
   setState("result");
-  $("#resultCount").focus({ preventScroll: true });
+  calmResultTime = 0;
+  if (!calmMode) $("#resultCount").focus({ preventScroll: true });
   $$(".share").forEach((b) => (b.disabled = false));
   updateScore();
 }
@@ -474,6 +489,17 @@ $$("dialog .close").forEach(
   (b) => (b.onclick = () => b.closest("dialog").close()),
 );
 $(".close-settings").onclick = () => $("#settingsDialog").close();
+for (const id of ["calmMode", "flightTrajectory"]) {
+  $("#" + id).onchange = () => {
+    calmMode = $("#calmMode").checked;
+    flightTrajectory = $("#flightTrajectory").checked;
+    calmResultTime = 0;
+    applyViewPreferences();
+    try {
+      localStorage.setItem("skip-stone-view-v1", JSON.stringify({ calmMode, flightTrajectory }));
+    } catch {}
+  };
+}
 $("#timing").onchange = () => {
   if (challenge) return;
   mode = $("#timing").value;
@@ -722,6 +748,10 @@ try {
   function frame(now) {
     const elapsed = now - last;
     last = now;
+    if (calmMode && state === "result" && !document.hidden && !$("#settingsDialog").open) {
+      calmResultTime += Math.min(elapsed, 80);
+      if (calmResultTime >= 3200) reset();
+    }
     if (elapsed > 0 && !document.hidden) {
       frameTimes.push(elapsed);
       if (frameTimes.length > 240) frameTimes.shift();
@@ -787,6 +817,7 @@ try {
       power,
       stone,
       targetClock,
+      calmMode,
     );
     if (coords?.launch && ["ready", "preparing"].includes(state)) {
       $("#launch").style.left = `${coords.launch.x}px`;
