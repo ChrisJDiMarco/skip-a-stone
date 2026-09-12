@@ -11,3 +11,5 @@ Records are local to the browser and separated by stone, timing mode, conditions
 Keyboard: 1/2/3 chooses stone, arrows adjust aim/power, Space prepares then releases, Escape cancels preparation or pauses flight. Focused interface buttons retain normal keyboard behavior. Settings includes slower timing and stationary camera. Audio is optional.
 
 Generated originals and visual targets are retained in `docs/`; they are excluded from the published static directory. Three.js license is in `dist/vendor/THREE-LICENSE.txt`.
+
+Feature update: drag-to-aim launch rock, independently timed body alignment, four deterministic moving boat targets, and a default low stone camera. During flight, water uses world-space normals and reflected environment shading; the distant landscape remains a constrained backdrop. Boat points are separate from skip records. Rules 2 preserves old stored records without comparing them against the new physics; v1 challenge links report a version mismatch.

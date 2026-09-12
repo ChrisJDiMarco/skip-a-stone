@@ -1,5 +1,5 @@
 // Replay rules are immutable once published. Bump RULES when tuning physics.
-export const RULES = 1;
+export const RULES = 2;
 export const STONES = Object.freeze({
   flat: { retention: 0.893, stabilityLoss: 0.064, tolerance: 1, lift: 0.06 },
   thin: { retention: 0.91, stabilityLoss: 0.052, tolerance: 0.74, lift: 0.055 },
@@ -21,11 +21,16 @@ export function shot(input) {
     throw Error("Unknown stone or timing mode.");
   for (const k of ["power", "heading", "tilt"])
     if (!Number.isFinite(input[k])) throw Error("Invalid throw.");
+  for (const k of ["body", "phase"])
+    if (input[k] !== undefined && !Number.isFinite(input[k]))
+      throw Error("Invalid throw.");
   return Object.freeze({
     stone: input.stone,
     mode: input.mode,
     power: Math.round(clamp(input.power, 0.1, 1) * 1000) / 1000,
     heading: Math.round(clamp(input.heading, -0.4, 0.7) * 1000) / 1000,
+    body: Math.round(clamp(input.body ?? 0, -1, 1) * 1000) / 1000,
+    phase: Math.round(clamp(input.phase ?? 0, 0, 1000) * 1000) / 1000,
     tilt: Math.round(clamp(input.tilt, -1, 1) * 1000) / 1000,
   });
 }
@@ -33,11 +38,15 @@ export function simulate(input) {
   const s = shot(input),
     p = STONES[s.stone],
     dt = 1 / 120;
-  const quality = clamp(1 - Math.abs(s.tilt) / p.tolerance, 0, 1);
+  const quality = clamp(
+    1 - Math.abs(s.tilt) / p.tolerance - Math.abs(s.body) * 0.45,
+    0,
+    1,
+  );
   let speed = (9 + s.power * 26) * (s.stone === "heavy" ? 1.45 : 1),
-    vx = Math.sin(s.heading) * speed,
-    vz = -Math.cos(s.heading) * speed;
-  let x = -6,
+    vx = Math.sin(s.heading + s.body * 0.12) * speed,
+    vz = -Math.cos(s.heading + s.body * 0.12) * speed;
+  let x = -3,
     y = 0.13,
     z = 3,
     vy = -0.3,
@@ -47,6 +56,7 @@ export function simulate(input) {
     first = null,
     last = null,
     done = false;
+  const hits = [];
   const samples = [{ t, x, y, z }],
     events = [];
   for (let i = 0; i < 1800 && !done; i++) {
@@ -79,6 +89,19 @@ export function simulate(input) {
         done = true;
       }
     }
+    for (const target of TARGETS) {
+      if (hits.some((h) => h.id === target.id)) continue;
+      const boat = targetPosition(target, s.phase + t);
+      if (y < 1.15 && Math.hypot(x - boat.x, z - boat.z) < target.radius) {
+        hits.push({
+          id: target.id,
+          t,
+          x: boat.x,
+          z: boat.z,
+          points: target.points,
+        });
+      }
+    }
     samples.push({ t, x, y, z });
   }
   if (!done) {
@@ -94,6 +117,8 @@ export function simulate(input) {
   }
   return {
     input: s,
+    hits,
+    points: hits.reduce((sum, h) => sum + h.points, 0),
     samples,
     events,
     skips,
@@ -171,7 +196,16 @@ export function decodeChallenge(raw) {
     typeof v.s !== "object" ||
     Array.isArray(v.s) ||
     Object.keys(v.s).some(
-      (k) => !["stone", "mode", "power", "heading", "tilt"].includes(k),
+      (k) =>
+        ![
+          "stone",
+          "mode",
+          "power",
+          "heading",
+          "tilt",
+          "body",
+          "phase",
+        ].includes(k),
     )
   )
     throw Error("Invalid challenge throw.");
@@ -179,11 +213,68 @@ export function decodeChallenge(raw) {
     ["power", 0.1, 1],
     ["heading", -0.4, 0.7],
     ["tilt", -1, 1],
+    ["body", -1, 1],
+    ["phase", 0, 1000],
   ])
     if (!Number.isFinite(v.s[k]) || v.s[k] < a || v.s[k] > b)
       throw Error("Invalid challenge throw.");
   return {
     name: v.n.replace(/[\x00-\x1f\x7f]/g, "").trim() || "Friend",
     shot: shot(v.s),
+  };
+}
+
+// Shared paths make the visible boats and scored collisions agree exactly.
+export const TARGETS = Object.freeze([
+  {
+    id: "coral",
+    x: -3,
+    z: -10,
+    amplitude: 3,
+    rate: 0.55,
+    offset: 0,
+    radius: 1.2,
+    points: 100,
+    color: 0xf57e63,
+  },
+  {
+    id: "cream",
+    x: 3,
+    z: -20,
+    amplitude: 4,
+    rate: -0.42,
+    offset: 1.7,
+    radius: 1.15,
+    points: 150,
+    color: 0xffdf96,
+  },
+  {
+    id: "blue",
+    x: 10,
+    z: -31,
+    amplitude: 4.5,
+    rate: 0.36,
+    offset: 3.4,
+    radius: 1.1,
+    points: 200,
+    color: 0x8bc8dc,
+  },
+  {
+    id: "gold",
+    x: 16,
+    z: -43,
+    amplitude: 5,
+    rate: -0.3,
+    offset: 0.8,
+    radius: 1,
+    points: 300,
+    color: 0xfcc457,
+  },
+]);
+export function targetPosition(target, t) {
+  return {
+    x: target.x + Math.sin(t * target.rate + target.offset) * target.amplitude,
+    y: 0.12,
+    z: target.z,
   };
 }

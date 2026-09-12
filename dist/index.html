@@ -61,11 +61,13 @@
       <div id="ghostLabel" aria-hidden="true"></div>
       <button
         id="launch"
-        aria-label="Prepare a throw. Drag back for power and release when level."
+        aria-label="Drag this rock to aim and set power. Release when angle and body align."
       >
         <span class="launch-stone"></span
         ><span class="launch-label"
-          >Pick your moment.<small>Drag back. Release when level.</small></span
+          >Pick your moment.<small
+            >Drag to aim · pull back for power</small
+          ></span
         >
       </button>
       <div id="feedback" role="status" aria-live="polite"></div>
@@ -82,8 +84,8 @@
         </button>
       </section>
       <section id="throwPanel" aria-label="Throw controls">
-        <div class="glass">
-          <div class="power-row">
+        <div class="glass control-deck">
+          <div class="meter power-meter">
             <label for="power">POWER <b id="powerValue">65%</b></label
             ><input
               id="power"
@@ -92,18 +94,57 @@
               max="100"
               value="65"
               aria-label="Throw power"
-            />
+            /><small>Pull back</small>
           </div>
-          <div class="tilt-row">
-            <span class="level-stone"></span>
-            <div class="track">
+          <div class="meter">
+            <div class="meter-label">ANGLE <b id="angleValue">18°</b></div>
+            <div
+              class="track"
+              role="meter"
+              aria-label="Release angle alignment"
+              aria-valuemin="-100"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              id="angleMeter"
+            >
               <span id="sweet"></span><span id="needle"></span>
             </div>
+            <small>Keep it flat</small>
           </div>
-          <span class="level-label">LEVEL</span>
+          <div class="meter">
+            <div class="meter-label">BODY <b id="bodyValue">Centered</b></div>
+            <div
+              class="track"
+              role="meter"
+              aria-label="Body alignment"
+              aria-valuemin="-100"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              id="bodyMeter"
+            >
+              <span class="body-sweet"></span><span id="bodyNeedle"></span>
+            </div>
+            <small>Find your balance</small>
+          </div>
+          <p id="instruction">
+            Drag the rock to aim. Pull back for power. Release in the green.
+          </p>
         </div>
-        <p id="instruction">Pull back for power. Release when level.</p>
       </section>
+      <aside id="targetHint">
+        <b>Make a little splash.</b
+        ><span>Hit moving toy boats for bonus points.</span
+        ><small>100 · 150 · 200 · 300 points</small>
+      </aside>
+      <div id="pointsBadge">
+        <strong id="points">0</strong><span>BOAT POINTS</span>
+      </div>
+      <div id="flightHUD">
+        <div><span>SPEED</span><b id="speedValue">0 mph</b></div>
+        <div><span>RELEASE</span><b id="flightAngle">18°</b></div>
+        <div><span>SKIPS</span><b id="flightSkips">0</b></div>
+      </div>
+      <div id="aimReadout" aria-hidden="true"></div>
       <div id="actions">
         <button id="throw" class="primary">Prepare throw <span>↗</span></button
         ><button class="share link" disabled>Challenge a friend</button>
@@ -128,7 +169,8 @@
         <h2>Find your release.</h2>
         <p>
           Pull the stone back to set power. Move sideways to aim. Release as the
-          marker crosses the green band.
+          angle and body markers cross their green bands. Sideways pull aims in
+          the opposite direction, like a slingshot.
         </p>
         <p>
           A harder throw travels farther, but the timing is tighter. A flat
@@ -140,7 +182,7 @@
             <option value="relaxed">Relaxed · slower timing</option>
           </select></label
         ><label class="setting"
-          >Stationary camera<input id="still" type="checkbox" checked
+          >Stationary camera<input id="still" type="checkbox"
         /></label>
         <p class="keyboard">
           <b>Keyboard</b><br />1 / 2 / 3 choose a stone · ← → aim · ↑ ↓ power<br />Space
@@ -148,7 +190,8 @@
         </p>
         <p class="fine">
           Each stone and timing mode has its own best. Friend challenges use the
-          same conditions. Records stay on this device.
+          same conditions. Boat points reward targets; skip records stay
+          separate. Records stay on this device.
         </p>
         <button class="primary dark close-settings">Back to the lake</button>
       </dialog>

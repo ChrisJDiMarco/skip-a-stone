@@ -17,6 +17,9 @@ let state = "loading",
   power = 0.65,
   heading = 0.65,
   tilt = 0,
+  body = 0,
+  targetClock = 0,
+  lastHit = -1,
   prepStart = 0,
   playTime = 0,
   last = performance.now(),
@@ -53,7 +56,15 @@ try {
 } catch {
   storageOK = false;
 }
-const currentInput = () => ({ stone, mode, power, heading, tilt });
+const currentInput = () => ({
+  stone,
+  mode,
+  power,
+  heading,
+  tilt,
+  body,
+  phase: targetClock,
+});
 function best() {
   const s = records[category(currentInput())];
   return s ? simulate(s) : null;
@@ -127,6 +138,7 @@ function initChallenge() {
       challenge = decodeChallenge(raw);
       stone = challenge.shot.stone;
       mode = challenge.shot.mode;
+      targetClock = challenge.shot.phase;
       $("#challengeBar span").textContent =
         `${challenge.name}'s challenge · ${stone} · ${mode}`;
     } catch (e) {
@@ -145,13 +157,22 @@ function reset() {
   ghost = null;
   playTime = 0;
   lastEvent = -1;
+  lastHit = -1;
+  $("#points").textContent = "0";
   lake?.setReplay(null, null);
   $("#score").textContent = "0";
   $("#feedback").textContent = "";
   $("#floating").textContent = "";
   $("#ghostLabel").textContent = "";
-  $("#instruction").textContent = "Pull back for power. Release when level.";
+  $("#instruction").textContent =
+    "Drag to aim. Pull back for power. Release both markers in the green.";
+  tilt = body = 0;
   $("#needle").style.left = "50%";
+  $("#bodyNeedle").style.left = "50%";
+  $("#angleValue").textContent = "18°";
+  $("#bodyValue").textContent = "Centered";
+  $("#angleMeter").setAttribute("aria-valuenow", "0");
+  $("#bodyMeter").setAttribute("aria-valuenow", "0");
   setState("ready");
   setPower(power);
   updateScore();
@@ -163,7 +184,7 @@ function prepare() {
   prepStart = performance.now();
   setState("preparing");
   $("#feedback").textContent = "Find the green.";
-  $("#instruction").textContent = "Release when level. Take your time.";
+  $("#instruction").textContent = "Set power. Match angle + body. Release.";
   unlockAudio();
   return true;
 }
@@ -179,9 +200,22 @@ function currentTilt(now) {
         : (Math.sign(raw) * (Math.abs(raw) - band)) / (1 - band),
   };
 }
+function currentBody(now) {
+  const cycle = mode === "relaxed" ? 4300 : 2450;
+  const raw = Math.sin(((now - prepStart) / cycle) * Math.PI * 2 - 0.8);
+  const band = 0.22;
+  return {
+    raw,
+    body:
+      Math.abs(raw) < band
+        ? 0
+        : (Math.sign(raw) * (Math.abs(raw) - band)) / (1 - band),
+  };
+}
 function release() {
   if (state !== "preparing") return false;
   tilt = currentTilt(performance.now()).tilt;
+  body = currentBody(performance.now()).body;
   const s = shot(currentInput());
   ghost = getGhost();
   replay = simulate(s);
@@ -191,8 +225,8 @@ function release() {
   lake.setReplay(replay, ghost);
   setState("flying");
   $("#feedback").textContent =
-    Math.abs(tilt) < 0.08
-      ? "Clean release."
+    Math.abs(tilt) < 0.08 && Math.abs(body) < 0.12
+      ? "Perfect alignment."
       : Math.abs(tilt) < 0.4
         ? "Almost level."
         : "A little too tilted.";
@@ -232,7 +266,8 @@ function finish() {
           ? `You matched ${challenge.name}.`
           : `${challenge.name} leads${ghost.skips > replay.skips ? ` by ${ghost.skips - replay.skips}` : " on distance"}.`;
   }
-  $("#resultMessage").textContent = message;
+  $("#resultMessage").textContent =
+    `${message} ${replay.points} boat points · ${replay.hits.length} ${replay.hits.length === 1 ? "hit" : "hits"}.`;
   $("#resultDetail").textContent =
     `${Math.abs(replay.input.tilt) < 0.08 ? "Clean release" : Math.abs(replay.input.tilt) < 0.4 ? "Nearly level" : "Try a flatter release"} · ${Math.round(replay.input.power * 100)}% · ${(replay.distanceCm / 100).toFixed(1)} m`;
   setState("result");
@@ -299,8 +334,12 @@ $("#launch").addEventListener("pointermove", (e) => {
     dy = e.clientY - drag.y;
   drag.moved ||= Math.hypot(dx, dy) > 9;
   if (!drag.moved) return;
-  heading = clamp(0.65 - dx / Math.min(innerWidth * 0.5, 400), -0.4, 0.7);
-  setPower(0.1 + (Math.max(0, dy) / Math.min(innerHeight * 0.24, 180)) * 0.9);
+  heading = clamp(Math.atan2(-dx, Math.max(35, dy)), -0.4, 0.7);
+  setPower(
+    0.1 +
+      (Math.hypot(dx, Math.max(0, dy)) / Math.min(innerHeight * 0.24, 180)) *
+        0.9,
+  );
 });
 $("#launch").addEventListener("pointerup", (e) => {
   if (!drag || e.pointerId !== drag.id) return;
@@ -493,6 +532,9 @@ function gameState() {
     power,
     heading,
     tilt: state === "preparing" ? currentTilt(performance.now()).tilt : tilt,
+    body: state === "preparing" ? currentBody(performance.now()).body : body,
+    points: Number($("#points").textContent),
+    camera: $("#still").checked ? "shore" : "stone",
     skips: Number($("#score").textContent),
     best: best()?.skips ?? null,
     challenge: challenge?.name ?? null,
@@ -637,8 +679,8 @@ try {
       "Device storage is unavailable. Best throws will last for this session.",
     );
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  $("#still").checked = true;
-  lake.setStationary(true);
+  $("#still").checked = reduce;
+  lake.setStationary(reduce);
   lake.renderer.domElement.addEventListener("webglcontextlost", (e) => {
     e.preventDefault();
     if (state === "preparing") reset();
@@ -655,12 +697,25 @@ try {
       frameTimes.push(elapsed);
       if (frameTimes.length > 240) frameTimes.shift();
     }
+    if (["ready", "preparing"].includes(state))
+      targetClock =
+        (targetClock + Math.min(elapsed / 1000, 0.08) * 0.36) % 1000;
     if (state === "preparing") {
+      const alignment = currentBody(now);
+      body = alignment.body;
+      $("#bodyNeedle").style.left = `${(alignment.raw + 1) * 50}%`;
+      $("#bodyValue").textContent =
+        body === 0 ? "Centered" : body < 0 ? "Lean left" : "Lean right";
+      $("#bodyMeter").setAttribute("aria-valuenow", Math.round(body * 100));
       const t = currentTilt(now);
       tilt = t.tilt;
       $("#needle").style.left = `${(t.raw + 1) * 50}%`;
+      $("#angleValue").textContent = `${Math.round(18 + tilt * 14)}°`;
+      $("#angleMeter").setAttribute("aria-valuenow", Math.round(tilt * 100));
       $("#feedback").textContent =
-        tilt === 0 ? "Level. Let it fly." : "Find the green.";
+        tilt === 0 && body === 0
+          ? "Together. Let it fly."
+          : "Find your alignment.";
     }
     if (state === "flying") {
       playTime += Math.min(elapsed / 1000, 0.08) * 0.36;
@@ -671,6 +726,27 @@ try {
         $("#score").textContent = ev.count;
         splashSound(ev.energy);
       }
+      for (let i = lastHit + 1; i < replay.hits.length; i++) {
+        const hit = replay.hits[i];
+        if (hit.t > playTime) break;
+        lastHit = i;
+        $("#points").textContent = replay.hits
+          .slice(0, i + 1)
+          .reduce((sum, h) => sum + h.points, 0);
+        $("#feedback").textContent = `Boat hit! +${hit.points}`;
+        splashSound(35);
+      }
+      const sampleIndex = Math.min(
+        replay.samples.length - 1,
+        Math.floor(playTime * 120),
+      );
+      const a = replay.samples[Math.max(0, sampleIndex - 1)],
+        b = replay.samples[sampleIndex];
+      $("#speedValue").textContent =
+        `${Math.round(playTime >= replay.duration ? 0 : Math.hypot(b.x - a.x, b.z - a.z) * 120 * 2.237)} mph`;
+      $("#flightAngle").textContent =
+        `${Math.round(18 + replay.input.tilt * 14)}°`;
+      $("#flightSkips").textContent = $("#score").textContent;
       if (playTime > Math.max(replay.duration, ghost?.duration ?? 0) + 0.65)
         finish();
     }
@@ -681,7 +757,16 @@ try {
       heading,
       power,
       stone,
+      targetClock,
     );
+    if (coords?.launch && ["ready", "preparing"].includes(state)) {
+      $("#launch").style.left = `${coords.launch.x}px`;
+      $("#launch").style.top = `${coords.launch.y}px`;
+      $("#aimReadout").textContent =
+        `${Math.round((heading * 180) / Math.PI)}° aim`;
+      $("#aimReadout").style.left = `${coords.launch.x + 70}px`;
+      $("#aimReadout").style.top = `${coords.launch.y - 70}px`;
+    }
     if (coords && ["flying", "paused", "result"].includes(state)) {
       const count = Number($("#score").textContent);
       $("#floating").textContent = count
@@ -690,6 +775,7 @@ try {
       $("#floating").style.left = `${coords.player.x}px`;
       $("#floating").style.top = `${coords.player.y}px`;
       $("#floating").hidden = !coords.player.visible;
+      $("#ghostLabel").hidden = !coords.ghost;
       if (coords.ghost && ghost) {
         $("#ghostLabel").textContent =
           `${ghostName()} · ${ghost.events.filter((e) => e.kind === "skip" && e.t <= playTime).length}`;

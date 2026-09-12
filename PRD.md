@@ -246,3 +246,11 @@ The implementation brief should carry both reference images, this PRD, tested tu
 - [Three.js WebGLRenderer](https://threejs.org/docs/pages/WebGLRenderer.html): graphics compatibility, renderer diagnostics, and shader preparation.
 - [MDN Navigator.share](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share): native sharing constraints and fallback need.
 - Installed Sites 0.1.66 building/hosting guidance: static output, Site identity, source/version packaging, and deployment lifecycle. This platform contract was checked locally; verify the installed version again when building.
+
+## September 12 feature update — approved user request
+
+- Drag the actual launch rock: pull direction aims the shot, pull length sets power; retain keyboard controls and pointer cancellation.
+- Default to a low stone-following camera after release. Keep stationary camera and reduced-motion alternatives.
+- Four moving toy sailboats award 100/150/200/300 points once each per throw. Share deterministic target phase in challenges; keep boat points separate from skip records.
+- Add independently moving body alignment to release angle; power remains controlled by pullback. Both alignment errors affect the simulation. Use a compact horizontal three-meter deck.
+- Rules version 2 isolates the new stability and starting-position behavior from published v1 records/challenges. Old data is retained, and old challenge links show the existing version mismatch message instead of silently changing their score.

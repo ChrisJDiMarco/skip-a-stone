@@ -845,3 +845,379 @@ body.result #ghostLabel:before {
   left: 2px;
   top: 11px;
 }
+/* Compact alignment deck and stone-camera HUD. */
+#throwPanel {
+  width: min(630px, 48vw);
+  bottom: 26px;
+  text-align: left;
+}
+.control-deck {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 18px 20px 12px;
+  border-radius: 22px;
+  background: linear-gradient(130deg, #142b31ed, #273b39d9);
+  border: 1px solid #d3eced70;
+  box-shadow:
+    0 14px 45px #071b2844,
+    inset 0 1px #ffffff20;
+}
+.meter {
+  min-width: 0;
+  padding: 0 18px;
+  border-right: 1px solid #ffffff25;
+}
+.meter:first-child {
+  padding-left: 0;
+}
+.meter:nth-child(3) {
+  border: 0;
+  padding-right: 0;
+}
+.meter label,
+.meter-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #dcebed;
+  margin-bottom: 17px;
+}
+.meter b {
+  font-size: 14px;
+  letter-spacing: 0;
+  color: white;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.meter small {
+  display: block;
+  margin-top: 15px;
+  color: #c0d0d1;
+  font-size: 12px;
+}
+.meter .track {
+  height: 5px;
+  border-radius: 5px;
+  background: #77909499;
+  margin: 0;
+  width: 100%;
+}
+.track:before,
+.track:after {
+  display: none;
+}
+#sweet,
+.body-sweet {
+  position: absolute;
+  top: -4px;
+  height: 13px;
+  background: #80e2b077;
+  border-radius: 8px;
+  left: 39%;
+  width: 22%;
+}
+#needle,
+#bodyNeedle {
+  position: absolute;
+  width: 11px;
+  height: 19px;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 7px;
+  background: #f0fff6;
+  box-shadow: 0 0 12px #b4f6d1a0;
+}
+.power-meter input {
+  margin: 0;
+  accent-color: #a6edc4;
+  height: 5px;
+  display: block;
+  background: linear-gradient(
+    90deg,
+    #79908f 55%,
+    #8ce4b2 55%,
+    #8ce4b2 84%,
+    #79908f 84%
+  );
+}
+#instruction {
+  grid-column: 1/-1;
+  text-align: center;
+  border-top: 1px solid #ffffff20;
+  padding-top: 11px;
+  margin-top: 13px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #d5e4e5;
+}
+#targetHint {
+  position: absolute;
+  left: 30px;
+  top: 145px;
+  width: 245px;
+  padding: 17px 20px;
+  border: 1px solid #dceff06b;
+  border-radius: 20px;
+  background: #112d36b3;
+  backdrop-filter: blur(16px);
+  color: white;
+}
+#targetHint b,
+#targetHint span,
+#targetHint small {
+  display: block;
+}
+#targetHint b {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+#targetHint span {
+  font-size: 14px;
+  line-height: 1.45;
+}
+#targetHint small {
+  font-size: 12px;
+  color: #f7dc9a;
+  margin-top: 10px;
+}
+#pointsBadge {
+  position: absolute;
+  right: 35px;
+  top: 145px;
+  text-align: right;
+  text-shadow: 0 2px 10px #062431;
+}
+#pointsBadge strong {
+  display: block;
+  font-size: 46px;
+  font-weight: 650;
+}
+#pointsBadge span {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+#flightHUD {
+  display: none;
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  gap: 26px;
+  padding: 19px 24px;
+  background: #112b34cc;
+  border: 1px solid #d1e5e67a;
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+}
+#flightHUD > div + div {
+  padding-left: 26px;
+  border-left: 1px solid #ffffff40;
+}
+#flightHUD span {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+  color: #d2e0e3;
+}
+#flightHUD b {
+  font-size: 27px;
+}
+body.flying #flightHUD,
+body.paused #flightHUD {
+  display: flex;
+}
+body.flying #throwPanel,
+body.flying .stones,
+body.flying #actions,
+body.paused #throwPanel,
+body.paused .stones {
+  display: none;
+}
+body.flying #targetHint,
+body.paused #targetHint {
+  opacity: 0.6;
+}
+#launch {
+  width: 105px;
+  height: 76px;
+  padding: 0;
+  background: none;
+  border-radius: 35px;
+  overflow: visible;
+}
+#launch .launch-stone {
+  visibility: hidden;
+  margin: 0;
+  height: 30px;
+}
+.launch-label {
+  position: absolute;
+  top: 73px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.launch-label small {
+  font-size: 12px;
+}
+#aimReadout {
+  position: absolute;
+  font-size: 13px;
+  font-weight: 600;
+  color: #defaff;
+  text-shadow: 0 2px 8px #12383f;
+  pointer-events: none;
+}
+body.flying #aimReadout,
+body.result #aimReadout,
+body.paused #aimReadout {
+  display: none;
+}
+body.preparing #launch {
+  opacity: 1;
+}
+body.preparing .launch-label {
+  opacity: 0.75;
+}
+@media (max-width: 1100px) {
+  #throwPanel {
+    width: 54vw;
+  }
+  .meter {
+    padding: 0 12px;
+  }
+  .stones {
+    transform: scale(0.85);
+    transform-origin: bottom left;
+  }
+  #actions {
+    transform: scale(0.85);
+    transform-origin: bottom right;
+  }
+}
+@media (max-width: 760px) {
+  #targetHint {
+    top: 115px;
+    left: 16px;
+    width: 190px;
+    padding: 12px 14px;
+  }
+  #targetHint b {
+    font-size: 14px;
+  }
+  #targetHint span {
+    font-size: 12px;
+  }
+  #targetHint small {
+    display: none;
+  }
+  #pointsBadge {
+    top: 118px;
+    right: 16px;
+  }
+  #pointsBadge strong {
+    font-size: 30px;
+  }
+  #pointsBadge span {
+    font-size: 10px;
+  }
+  #throwPanel {
+    width: calc(100% - 24px);
+    bottom: 90px;
+  }
+  .control-deck {
+    padding: 15px 14px 10px;
+    border-radius: 19px;
+  }
+  .meter {
+    padding: 0 12px;
+  }
+  .meter label,
+  .meter-label {
+    font-size: 10px;
+    display: block;
+    margin-bottom: 13px;
+  }
+  .meter b {
+    display: block;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .meter small {
+    font-size: 10px;
+    margin-top: 13px;
+  }
+  #instruction {
+    font-size: 11px;
+  }
+  .stones {
+    bottom: 10px;
+    left: 12px;
+    transform: scale(0.7);
+  }
+  #actions {
+    right: 12px;
+    bottom: 22px;
+    transform: scale(0.75);
+  }
+  #flightHUD {
+    left: 12px;
+    right: 12px;
+    bottom: 20px;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px 18px;
+  }
+  #flightHUD b {
+    font-size: 23px;
+  }
+  #flightHUD > div + div {
+    padding-left: 15px;
+  }
+  .launch-label {
+    font-size: 12px;
+  }
+  .launch-label small {
+    font-size: 10px;
+  }
+}
+body.flying #feedback,
+body.paused #feedback {
+  top: 135px;
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 17px;
+}
+body.flying #floating,
+body.paused #floating {
+  display: none;
+}
+@media (max-width: 760px) {
+  #targetHint {
+    top: 165px;
+    width: 180px;
+  }
+  #pointsBadge {
+    top: 167px;
+  }
+  .launch-label {
+    left: 0;
+    text-align: left;
+    white-space: normal;
+    width: 190px;
+  }
+  #launch .launch-label small {
+    font-size: 11px;
+  }
+  body.flying #feedback,
+  body.paused #feedback {
+    top: 270px;
+    font-size: 14px;
+    width: 80%;
+    text-align: center;
+  }
+}

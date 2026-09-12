@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  RULES,
   shot,
   simulate,
   positionAt,
@@ -79,9 +80,9 @@ test("malformed, oversized, unsupported, and out-of-range challenges rejected", 
     "***",
     pack(null),
     pack({ v: 2 }),
-    pack({ v: 1, r: 1, c: "calm", n: "A", s: { ...sample, power: 2 } }),
-    pack({ v: 1, r: 1, c: "calm", n: "A", s: sample, score: 100 }),
-    pack({ v: 1, r: 1, c: "calm", n: "A", s: { ...sample, score: 100 } }),
+    pack({ v: 1, r: RULES, c: "calm", n: "A", s: { ...sample, power: 2 } }),
+    pack({ v: 1, r: RULES, c: "calm", n: "A", s: sample, score: 100 }),
+    pack({ v: 1, r: RULES, c: "calm", n: "A", s: { ...sample, score: 100 } }),
   ])
     assert.throws(() => decodeChallenge(raw));
   assert.throws(() => shot({ ...sample, power: NaN }));
@@ -107,8 +108,31 @@ test("stone identifiers never coerce arrays into valid choices", () => {
     assert.throws(() => shot({ ...sample, stone }));
     assert.throws(() =>
       decodeChallenge(
-        pack({ v: 1, r: 1, c: "calm", n: "A", s: { ...sample, stone } }),
+        pack({ v: 1, r: RULES, c: "calm", n: "A", s: { ...sample, stone } }),
       ),
     );
   }
+});
+
+test("body alignment changes stability and direction, and replays exactly", () => {
+  const a = simulate({ ...sample, body: 0, phase: 12.25 });
+  const b = simulate({ ...sample, body: 0.9, phase: 12.25 });
+  assert.ok(a.skips > b.skips);
+  assert.notEqual(a.samples[10].x, b.samples[10].x);
+  assert.deepEqual(b, simulate(decodeChallenge(encodeChallenge(b.input)).shot));
+  assert.throws(() => shot({ ...sample, body: NaN }));
+});
+test("moving boats award points once per actual contact and misses earn zero", () => {
+  const base = { ...sample, heading: 0.26, body: 0, phase: 0 };
+  const hit = simulate(base),
+    miss = simulate({ ...base, heading: -0.4 });
+  assert.ok(hit.points > 0);
+  assert.equal(miss.points, 0);
+  assert.equal(new Set(hit.hits.map((h) => h.id)).size, hit.hits.length);
+  assert.equal(
+    hit.points,
+    hit.hits.reduce((sum, h) => sum + h.points, 0),
+  );
+  assert.deepEqual(hit, simulate(decodeChallenge(encodeChallenge(base)).shot));
+  assert.notDeepEqual(hit.hits, simulate({ ...base, phase: 10 }).hits);
 });
