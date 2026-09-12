@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { addCrew } from "./boat-crew.js";
 import { TARGETS } from "./simulation.js";
 
 function outline(scale = 1) {
@@ -169,10 +170,7 @@ export async function createBoats(scene, loader) {
     rim.rotation.x = -Math.PI / 2;
     rim.position.y = 0.17;
     group.add(rim);
-    const deckShape = outline(0.94),
-      cockpit = new THREE.Path();
-    cockpit.absellipse(-0.35, 0, 0.34, 0.22, 0, Math.PI * 2, true, 0);
-    deckShape.holes.push(cockpit);
+    const deckShape = outline(1);
     const deck = new THREE.Mesh(
       new THREE.ExtrudeGeometry(deckShape, {
         depth: 0.025,
@@ -185,19 +183,26 @@ export async function createBoats(scene, loader) {
     deck.position.y = 0.165;
     group.add(deck);
     const inside = new THREE.Mesh(
-      new THREE.BoxGeometry(0.65, 0.035, 0.38),
+      new THREE.BoxGeometry(0.68, 0.025, 0.42),
       new THREE.MeshStandardMaterial({ color: 0x223c43, roughness: 0.8 }),
     );
-    inside.position.set(-0.35, 0.035, 0);
+    inside.position.set(-0.35, 0.195, 0);
     group.add(inside);
     for (const x of [-0.58, -0.13]) {
       const seat = new THREE.Mesh(
         new THREE.BoxGeometry(0.12, 0.04, 0.41),
         teak,
       );
-      seat.position.set(x, 0.13, 0);
+      seat.position.set(x, 0.245, 0);
       group.add(seat);
     }
+    // A sealed deck and floor keep the cockpit opaque even from grazing angles.
+    for (const z of [-.235, .235]) group.add(rail([-.72,.225,z],[.02,.225,z],.024,teak));
+    const bottom = new THREE.Mesh(new THREE.ShapeGeometry(outline(.46),32), paint);
+    bottom.rotation.x = Math.PI / 2; bottom.position.y = -.22; group.add(bottom);
+    const hatch = new THREE.Mesh(new THREE.BoxGeometry(.26,.025,.25),ivory);
+    hatch.position.set(.52,.205,-.05); group.add(hatch);
+    const updateCrew = addCrew(group, index);
     const mast = rail([0.02, 0.15, 0], [0.02, 1.96, 0], 0.022, teak);
     group.add(mast);
     group.add(rail([0.02, 0.38, 0], [1, 0.38, 0], 0.016, teak));
@@ -311,6 +316,6 @@ export async function createBoats(scene, loader) {
     reflection.renderOrder = 2;
     group.add(reflection);
     scene.add(group);
-    return { target, group, wake, label, sails };
+    return { target, group, wake, label, sails, updateCrew };
   });
 }

@@ -791,6 +791,8 @@ try {
     if (coords?.launch && ["ready", "preparing"].includes(state)) {
       $("#launch").style.left = `${coords.launch.x}px`;
       $("#launch").style.top = `${coords.launch.y}px`;
+      $("#launch").style.width = `${coords.launch.width}px`;
+      $("#launch").style.height = `${coords.launch.height}px`;
       $("#aimReadout").textContent =
         `${Math.round((heading * 180) / Math.PI)}° aim`;
       $("#aimReadout").style.left = `${coords.launch.x + 70}px`;

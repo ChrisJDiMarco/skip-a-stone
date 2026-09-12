@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { createBoats } from "./boats.js";
+import { createFish } from "./fish.js?v=underwater";
+import { createBoats } from "./boats.js?v=crew";
 import { createTrajectoryGuide } from "./trajectory.js";
 import { positionAt, simulate, targetPosition } from "./simulation.js";
 export async function createLake(container, rocks) {
@@ -61,12 +62,14 @@ export async function createLake(container, rocks) {
   bg.frustumCulled = false;
   bg.renderOrder = -100;
   scene.add(bg);
+  const fish = createFish(renderer, land);
   const water = new THREE.Mesh(
     new THREE.PlaneGeometry(10000, 10000, 1, 1),
     new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
         immersion: { value: 0 },
+        fishMap: { value: fish.texture },
         land: { value: land },
         resultMap: { value: resultLand },
         resultMix: { value: 0 },
@@ -76,7 +79,7 @@ export async function createLake(container, rocks) {
       },
       vertexShader: `varying vec3 wp;varying vec4 clip;void main(){vec4 w=modelMatrix*vec4(position,1.);wp=w.xyz;clip=projectionMatrix*viewMatrix*w;gl_Position=clip;}`,
       fragmentShader: `
- uniform float immersion;uniform float time;uniform sampler2D resultMap;uniform float resultMix;uniform sampler2D land;uniform sampler2D bed;uniform sampler2D normalMap;uniform vec2 viewport;varying vec3 wp;varying vec4 clip;
+ uniform sampler2D fishMap;uniform float immersion;uniform float time;uniform sampler2D resultMap;uniform float resultMix;uniform sampler2D land;uniform sampler2D bed;uniform sampler2D normalMap;uniform vec2 viewport;varying vec3 wp;varying vec4 clip;
  float waves(vec2 p){return sin(p.x*4.1+p.y*3.2+time*.9)*.012+sin(p.x*7.8-p.y*4.7-time*.6)*.006+sin(p.x*16.+p.y*9.1+time*.7)*.003+sin(p.y*28.+p.x*13.-time)*.0015;}
  // Camera-projected environment capture provides the base radiance. Animated
  // normal-map refraction and specular response shade the actual lake mesh.
@@ -129,6 +132,13 @@ export async function createLake(container, rocks) {
  flightWater+=vec3(.22,.35,.4)*(n.y*.055+waveSlope*.018)*bank;
  flightWater+=vec3(1.,.76,.43)*sunline*min(glint,1.)*.22*bank;
  color=mix(color,flightWater,immersion);
+ // Composite submerged geometry through the moving water surface, beneath its highlights.
+ vec2 fishUV=screen+n*vec2(.0014,.0008);
+ vec4 under=texture2D(fishMap,fishUV);
+ float clearWater=mix(waterMask,1.,immersion)*(1.-smoothstep(.54,.675,screen.y));
+ clearWater*=mix(1.,clamp((1.-facing)*1.3,.12,1.),immersion);
+ vec3 submerged=mix(under.rgb/max(under.a,.001),vec3(.035,.22,.23),.34);
+ color=mix(color,submerged,under.a*clearWater*.64);
  gl_FragColor=vec4(color,1.);\n #include <colorspace_fragment>\n}`,
     }),
   );
@@ -367,6 +377,23 @@ export async function createLake(container, rocks) {
       visible: v.z < 1 && Math.abs(v.x) < 1.1,
     };
   };
+  const launchCorner = new THREE.Vector3();
+  function launchBounds() {
+    if (!stone.geometry.boundingBox) stone.geometry.computeBoundingBox();
+    const { min, max } = stone.geometry.boundingBox;
+    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+    for (let i = 0; i < 8; i++) {
+      launchCorner.set(i & 1 ? max.x : min.x, i & 2 ? max.y : min.y, i & 4 ? max.z : min.z)
+        .applyMatrix4(stone.matrixWorld).project(camera);
+      const x = (launchCorner.x * .5 + .5) * innerWidth;
+      const y = (-launchCorner.y * .5 + .5) * innerHeight;
+      left = Math.min(left, x); right = Math.max(right, x);
+      top = Math.min(top, y); bottom = Math.max(bottom, y);
+    }
+    return { x: (left + right) / 2, y: (top + bottom) / 2,
+      width: Math.max(112, (right - left) * 1.4 + 24),
+      height: Math.max(70, (bottom - top) * 1.25 + 28) };
+  }
   function setReplay(r, g) {
     current = r;
     ghostReplay = g;
@@ -456,7 +483,8 @@ export async function createLake(container, rocks) {
     const boatTime = current
       ? current.input.phase + Math.min(playTime, current.duration)
       : targetTime;
-    for (const { target, group, wake, label, sails } of boats) {
+    for (const { target, group, wake, label, sails, updateCrew } of boats) {
+      updateCrew(boatTime);
       const p = targetPosition(target, boatTime),
         hit = current?.hits.find((h) => h.id === target.id && h.t <= playTime);
       group.position.set(
@@ -683,6 +711,7 @@ export async function createLake(container, rocks) {
       sprayGeo.attributes.position.needsUpdate = true;
       skimSpray.material.opacity = 0.85 * (1 - sprayAge / 0.28);
     }
+    fish.render(t, camera);
     renderer.render(scene, camera);
     trajectoryGuide.update(guiding ? guideReplay : current, {
       state,
@@ -694,7 +723,7 @@ export async function createLake(container, rocks) {
       reduced: t === 0,
     });
     return {
-      launch: project({ x: -3, y: 0.13, z: 3 }),
+      launch: ["ready", "preparing"].includes(state) ? launchBounds() : null,
       player: project(stone.position),
       ghost: ghostReplay && !flight ? project(ghost.position) : null,
     };
@@ -704,6 +733,7 @@ export async function createLake(container, rocks) {
     camera.fov = innerWidth < 760 ? 100 : 53;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
+    fish.resize();
     bg.material.uniforms.aspect.value = innerWidth / innerHeight;
     water.material.uniforms.viewport.value.set(innerWidth, innerHeight);
     renderer.setPixelRatio(
@@ -711,6 +741,7 @@ export async function createLake(container, rocks) {
     );
   }
   addEventListener("resize", resize);
+  addEventListener("pagehide", () => fish.dispose(), { once: true });
   resize();
   return {
     render,
