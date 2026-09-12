@@ -30,17 +30,19 @@ export function createFlightWind(context) {
   gain.gain.value = 0;
   source.connect(highpass).connect(lowpass).connect(gain).connect(context.destination);
   source.start();
-  let previous = -1;
+  let previous = "";
   return {
-    update(intensity) {
+    update(intensity, fastStop = false) {
       const level = Math.round(Math.max(0, Math.min(1, intensity)) * 100) / 100;
-      if (level === previous) return;
-      previous = level;
+      const key = `${level}:${level === 0 && fastStop}`;
+      if (key === previous) return;
+      previous = key;
       const now = context.currentTime;
+      const fade = level ? 0.18 : fastStop ? 0.06 : 0.7;
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(level * 0.165, now, level ? 0.18 : 0.06);
+      gain.gain.setTargetAtTime(level * 0.165, now, fade);
       lowpass.frequency.cancelScheduledValues(now);
-      lowpass.frequency.setTargetAtTime(650 + level * 1550, now, 0.2);
+      lowpass.frequency.setTargetAtTime(650 + level * 1550, now, level ? 0.2 : fade);
     },
     dispose() {
       source.stop();

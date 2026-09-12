@@ -43,8 +43,8 @@ let state = "loading",
 const frameTimes = [];
 let lake, inspector;
 let flightWind = null, flightEdge = null, edgeIntensity = 0;
-function quietFlight() {
-  flightWind?.update(0);
+function quietFlight(fastStop = true) {
+  flightWind?.update(0, fastStop);
   if (flightEdge) flightEdge.style.opacity = "0";
   edgeIntensity = 0;
 }
@@ -119,7 +119,7 @@ function updateScore() {
 }
 function setState(value) {
   state = value;
-  if (value !== "flying") quietFlight();
+  if (value !== "flying") quietFlight(value !== "result");
   document.body.className = value;
   $("#game").dataset.state = value;
   $("#result").hidden = value !== "result";
@@ -472,6 +472,7 @@ addEventListener("blur", () => {
 });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
+    quietFlight(true);
     if (state === "preparing") reset();
     else if (state === "flying") cancel();
   }
@@ -479,7 +480,7 @@ document.addEventListener("visibilitychange", () => {
 });
 $("#sound").onclick = () => {
   muted = !muted;
-  if (muted) flightWind?.update(0);
+  if (muted) flightWind?.update(0, true);
   $("#sound").setAttribute(
     "aria-label",
     muted ? "Turn sound on" : "Turn sound off",
@@ -869,7 +870,9 @@ try {
       ? Math.min(1, flightSpeed / 32) * coords.flightBlend : 0;
     if (rushing > 0 && !muted && audio?.state === "running" && !flightWind)
       flightWind = createFlightWind(audio);
-    flightWind?.update(muted ? 0 : rushing);
+    const fastWindStop = muted || document.hidden || $("#settingsDialog").open
+      || $("#still").checked || !["flying", "result"].includes(state);
+    flightWind?.update(muted ? 0 : rushing, fastWindStop);
     const edgeTarget = reduce ? 0 : rushing * 0.7;
     edgeIntensity += (edgeTarget - edgeIntensity) * (1 - Math.exp(-Math.min(elapsed, 80) / 180));
     flightEdge.style.opacity = String(edgeIntensity);
