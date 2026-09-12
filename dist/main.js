@@ -771,6 +771,22 @@ try {
       $("#needle").style.left = `${(t.raw + 1) * 50}%`;
       $("#angleValue").textContent = `${Math.round(18 + tilt * 14)}°`;
       $("#angleMeter").setAttribute("aria-valuenow", Math.round(tilt * 100));
+      if (calmMode) {
+        const aligned = tilt === 0 && body === 0;
+        $("#calmAim").dataset.aligned = String(aligned);
+        $("#calmAim").style.setProperty("--power", `${power * 100}%`);
+        $("#calmPower").textContent = `${Math.round(power * 100)}%`;
+        $("#calmAlignment").textContent = aligned ? "Release gently" : "Align ● + ◆";
+        // Map each timing window into the same central green band.
+        const markerPosition = (raw, band) => {
+          const magnitude = Math.abs(raw);
+          const offset = magnitude <= band ? magnitude / band * 0.18
+            : 0.18 + (magnitude - band) / (1 - band) * 0.82;
+          return `${50 + Math.sign(raw) * offset * 50}%`;
+        };
+        $("#calmAngleMarker").style.left = markerPosition(t.raw, 0.23 - power * 0.12);
+        $("#calmBodyMarker").style.left = markerPosition(alignment.raw, 0.22);
+      }
       $("#feedback").textContent =
         tilt === 0 && body === 0
           ? "Together. Let it fly."
@@ -824,6 +840,12 @@ try {
       $("#launch").style.top = `${coords.launch.y}px`;
       $("#launch").style.width = `${coords.launch.width}px`;
       $("#launch").style.height = `${coords.launch.height}px`;
+      if (calmMode && state === "preparing") {
+        const panel = $("#calmAim");
+        const halfWidth = panel.offsetWidth / 2;
+        panel.style.left = `${clamp(coords.launch.x, halfWidth + 12, innerWidth - halfWidth - 12)}px`;
+        panel.style.top = `${Math.min(innerHeight - panel.offsetHeight - 12, coords.launch.y + coords.launch.height / 2 + 12)}px`;
+      }
       $("#aimReadout").textContent =
         `${Math.round((heading * 180) / Math.PI)}° aim`;
       $("#aimReadout").style.left = `${coords.launch.x + 70}px`;

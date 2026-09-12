@@ -73,6 +73,12 @@
         >
       </button>
       <div id="feedback" role="status" aria-live="polite"></div>
+      <div id="calmAim" aria-label="Throw power and alignment">
+        <div class="calm-aim-heading"><span>POWER <b id="calmPower">65%</b></span><span id="calmAlignment">Align ● + ◆</span></div>
+        <div class="calm-aim-track" aria-hidden="true"><span class="calm-sweet"></span><i id="calmAngleMarker"></i><i id="calmBodyMarker"></i></div>
+        <div class="calm-aim-legend"><span>● ANGLE</span><span>◆ BODY</span></div>
+        <div class="calm-power-fill" aria-hidden="true"></div>
+      </div>
       <section class="stones" aria-label="Choose your stone"><div class="stone-list" aria-label="Scroll to explore seven stones">
 <button data-stone="flat" aria-pressed="true" aria-haspopup="dialog"><span class="stone-art"><img alt="flat stone" /></span><strong>FLAT</strong><small>Forgiving</small></button>
 <button data-stone="thin" aria-pressed="false" aria-haspopup="dialog"><span class="stone-art"><img alt="thin stone" /></span><strong>THIN</strong><small>More skips</small></button>
@@ -193,7 +199,7 @@
         <label class="setting">Flight trajectory<input id="flightTrajectory" type="checkbox" checked /></label>
         <p class="fine">Show the dotted path and landing markers while your stone flies.</p>
         <label class="setting">Calm mode<input id="calmMode" type="checkbox" /></label>
-        <p class="fine">Only the Settings button stays visible. Drag the stone to aim and throw. After each throw, gently return to the shore automatically.</p>
+        <p class="fine">A quiet lake with just Settings. Pull back the stone to reveal a subtle aiming path and one compact power and alignment guide. After each throw, gently return to shore automatically.</p>
         <p class="keyboard">
           <b>Keyboard</b><br />1–7 choose a stone · ← → aim · ↑ ↓ power<br />Space
           prepares, then throws · Esc cancels or pauses

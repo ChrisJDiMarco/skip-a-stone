@@ -1423,7 +1423,7 @@ body.paused .guide-arc { animation-play-state: paused; }
 body[data-flight-trajectory="false"]:is(.flying, .paused, .result) .trajectory-guide {
   display: none;
 }
-body[data-calm="true"] #game > :not(#view):not(header):not(#launch):not(#settingsDialog):not(#loading):not(script) {
+body[data-calm="true"] #game > :not(#view):not(header):not(#launch):not(#calmAim):not(#settingsDialog):not(#loading):not(script) {
   display: none !important;
 }
 body[data-calm="true"] header > :not(.utilities),
@@ -1440,3 +1440,36 @@ body[data-calm="true"] #launch {
 body[data-calm="true"] #settings {
   display: inline-flex;
 }
+
+#calmAim {
+  display: none;
+  position: absolute;
+  width: min(240px, calc(100vw - 24px));
+  padding: 12px 16px 10px;
+  transform: translateX(-50%);
+  border: 1px solid #dcf1d629;
+  border-radius: 16px;
+  background: #173830d9;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 6px 24px #082a2620;
+  color: #e4efdf;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+body[data-calm="true"].preparing #calmAim { display: block; }
+.calm-aim-heading, .calm-aim-legend { display: flex; justify-content: space-between; align-items: center; }
+.calm-aim-heading { font-size: 10px; letter-spacing: .04em; }
+.calm-aim-heading b { margin-left: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+#calmAlignment { color: #c9e8b9; letter-spacing: 0; }
+.calm-aim-track { position: relative; height: 4px; margin: 18px 5px 13px; background: #e0f2dd28; border-radius: 4px; }
+.calm-sweet { position: absolute; left: 41%; width: 18%; height: 20px; top: -8px; border: 1px solid #c7efa375; border-radius: 6px; background: #b9eaa532; }
+#calmAngleMarker, #calmBodyMarker { position: absolute; left: 50%; width: 7px; height: 7px; background: #f0f5e9; box-shadow: 0 1px 4px #102b30; }
+#calmAngleMarker { top: -5px; transform: translateX(-50%); border-radius: 50%; }
+#calmBodyMarker { top: 3px; transform: translateX(-50%) rotate(45deg); background: #c4e7ad; border-radius: 1px; }
+.calm-aim-legend { font-size: 8px; letter-spacing: .1em; color: #d4e7cbbf; }
+.calm-power-fill { position: absolute; bottom: 0; left: 0; height: 3px; width: var(--power, 65%); background: #bddfaa; opacity: .7; }
+#calmAim[data-aligned="true"] .calm-sweet { background: #bbea9e66; box-shadow: 0 0 12px #b7f09335; }
+body[data-calm="true"].preparing .trajectory-guide { display: block !important; opacity: .55; }
+body[data-calm="true"].preparing .trajectory-guide :is(.guide-glow, .landing-outer, .landing-inner, .landing-number, .landing-splash, .landing-final, .landing-pole, .landing-flag, .landing-caption, .aim-fan, .aim-ticks, .pull-line, .preview-caption) { display: none; }
+body[data-calm="true"].preparing .guide-arc { stroke: #e1f1d8; stroke-width: 1.6; stroke-dasharray: 1 9; animation-duration: 3s; }
