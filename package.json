@@ -1,0 +1,9 @@
+{
+  "name": "skip-a-stone",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "dev": "python3 -m http.server 4322 --directory dist"
+  }
+}

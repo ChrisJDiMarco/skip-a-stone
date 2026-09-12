@@ -1,0 +1,847 @@
+@font-face {
+  font-family: Lake;
+  src: local("Avenir Next"), local("Avenir"), local("Segoe UI");
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  font-family: Lake, Arial, sans-serif;
+  background: #163f46;
+  color: #fff;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  color: inherit;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #cdf5be;
+  outline-offset: 5px;
+}
+button {
+  border: 0;
+  background: none;
+}
+button[hidden],
+[hidden] {
+  display: none !important;
+}
+#game,
+#view {
+  position: absolute;
+  inset: 0;
+}
+#view canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    #05171b30,
+    transparent 23%,
+    transparent 65%,
+    #0f171a55
+  );
+}
+header {
+  position: absolute;
+  top: 28px;
+  left: 30px;
+  right: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  pointer-events: none;
+  text-shadow: 0 1px 12px #20323c50;
+}
+header button {
+  pointer-events: auto;
+}
+h1 {
+  font-size: 42px;
+  letter-spacing: -1.5px;
+  line-height: 1.05;
+  margin: 0;
+  font-weight: 750;
+}
+.brand p {
+  margin: 8px 0;
+  font-size: 21px;
+}
+.scoreboard {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 2px;
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  white-space: nowrap;
+  letter-spacing: 1.5px;
+  font-size: 14px;
+}
+.scoreboard b {
+  font-size: 25px;
+  margin-left: 12px;
+  font-weight: 600;
+}
+.scoreboard i {
+  font-style: normal;
+}
+.utilities {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.conditions {
+  font-size: 11px;
+  letter-spacing: 1.3px;
+  font-weight: 650;
+}
+.icon {
+  height: 42px;
+  width: 42px;
+  border-radius: 50%;
+  background: #22383d35;
+  backdrop-filter: blur(12px);
+  font-size: 27px;
+  position: relative;
+}
+.off {
+  position: absolute;
+  left: 18px;
+  top: 5px;
+  font-size: 25px;
+}
+#launch {
+  position: absolute;
+  left: 31%;
+  top: 67%;
+  width: 240px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  touch-action: none;
+  padding: 28px 15px;
+  background: radial-gradient(ellipse, #052d3655, transparent 70%);
+  border-radius: 50%;
+  text-shadow: 0 1px 8px #102b32;
+}
+.launch-stone {
+  width: 75px;
+  height: 32px;
+  display: block;
+  background: linear-gradient(165deg, #758183, #293b40 65%, #152327);
+  border-radius: 48% 41% 40% 32%;
+  box-shadow:
+    inset 0 3px 3px #d6e2df45,
+    0 11px 10px #042b3180;
+  transform: rotate(-17deg);
+  margin-bottom: 20px;
+}
+.launch-label {
+  font-size: 17px;
+  font-weight: 650;
+}
+.launch-label small {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  margin-top: 6px;
+}
+.stones {
+  position: absolute;
+  left: 30px;
+  bottom: 38px;
+  display: flex;
+  gap: 4px;
+}
+.stones button {
+  width: 100px;
+  padding: 0;
+  text-align: center;
+  text-shadow: 0 1px 5px #173036;
+}
+.stone-art {
+  display: block;
+  height: 62px;
+  margin-bottom: 8px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: #a3a28c35;
+  position: relative;
+  backdrop-filter: blur(8px);
+}
+.stone-art:after {
+  content: "";
+  position: absolute;
+  inset: 15px 14px;
+  background: linear-gradient(165deg, #7c8586, #333c3e 48%, #151e23);
+  border-radius: 50% 33% 48% 32%;
+  box-shadow:
+    inset 1px 2px 2px #dae2dd66,
+    2px 5px 5px #071d2570;
+  transform: rotate(-15deg);
+}
+.thin:after {
+  inset: 20px 15px 14px;
+  background: linear-gradient(150deg, #777f7e, #283133 60%, #12232a);
+}
+.heavy:after {
+  inset: 12px 14px;
+  background: linear-gradient(150deg, #dfd5bc, #a39a85 65%, #787a6a);
+  border-radius: 45% 51% 39% 42%;
+}
+.stones [aria-pressed="true"] .stone-art {
+  border-color: #fff3d7;
+  background-color: #d7d0ab55;
+}
+.stones strong {
+  font-size: 14px;
+  letter-spacing: 1px;
+  font-weight: 550;
+  display: block;
+}
+.stones small {
+  font-size: 13px;
+  display: block;
+  margin-top: 4px;
+}
+#throwPanel {
+  position: absolute;
+  bottom: 29px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 440px;
+  text-align: center;
+}
+.glass {
+  padding: 18px 24px 10px;
+  border: 1px solid #fff8;
+  border-radius: 24px;
+  background: #363c35a8;
+  box-shadow: 0 8px 30px #071d2833;
+  backdrop-filter: blur(20px);
+}
+.power-row {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eeebd533;
+}
+.power-row label {
+  font-size: 13px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.power-row b {
+  font-size: 16px;
+  margin-left: 10px;
+}
+input[type="range"] {
+  accent-color: #f8f2de;
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+}
+.tilt-row {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  margin-top: 22px;
+}
+.level-stone {
+  width: 39px;
+  height: 8px;
+  border: 1px solid #fff9;
+  border-radius: 50%;
+}
+.track {
+  height: 3px;
+  background: #f7f2df;
+  width: 100%;
+  position: relative;
+}
+.track:before,
+.track:after {
+  content: "";
+  height: 10px;
+  width: 2px;
+  background: #fff;
+  position: absolute;
+  top: -4px;
+  left: 0;
+}
+.track:after {
+  left: auto;
+  right: 0;
+}
+#sweet {
+  position: absolute;
+  left: 40%;
+  width: 20%;
+  height: 24px;
+  top: -11px;
+  background: #8ddb8360;
+}
+#needle {
+  position: absolute;
+  top: -15px;
+  height: 32px;
+  width: 3px;
+  background: #fff;
+  left: 50%;
+  box-shadow: 0 0 6px #fff9;
+}
+.level-label {
+  display: block;
+  margin: 14px 0 0 60px;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+#instruction {
+  font-size: 14px;
+  margin: 11px 0 0;
+  text-shadow: 0 2px 6px #001b25;
+}
+#feedback {
+  position: absolute;
+  bottom: 197px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  color: #c8ffb5;
+  font-size: 20px;
+  font-weight: 600;
+  text-shadow: 0 2px 8px #10382b;
+}
+#actions {
+  position: absolute;
+  right: 30px;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.primary {
+  background: #f5f0df;
+  color: #14201b;
+  padding: 14px 26px;
+  border-radius: 50px;
+  font-size: 17px;
+  font-weight: 650;
+  min-width: 185px;
+  box-shadow: 0 4px 18px #061f2333;
+}
+.primary span {
+  margin-left: 20px;
+}
+.link {
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  padding: 5px;
+}
+.dark {
+  background: #21493b;
+  color: #fff;
+  width: 100%;
+}
+#result {
+  position: absolute;
+  bottom: 39px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 315px;
+  padding: 24px 30px 17px;
+  background: #f4f0e4f2;
+  border: 1px solid #fff8;
+  border-radius: 23px;
+  text-align: center;
+  color: #182522;
+  box-shadow: 0 10px 35px #10273122;
+  backdrop-filter: blur(18px);
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 2.6px;
+  margin: 0 0 10px;
+  font-weight: 650;
+}
+#result h2 {
+  font-size: 37px;
+  letter-spacing: -1px;
+  margin: 8px 0;
+}
+#resultMessage {
+  font-size: 15px;
+  margin: 8px 0 17px;
+}
+hr {
+  height: 1px;
+  background: #294e3c33;
+  border: 0;
+}
+#resultDetail {
+  font-size: 13px;
+  margin: 13px -12px 15px;
+  color: #40574f;
+}
+#result .link {
+  margin-top: 8px;
+}
+#floating,
+#ghostLabel {
+  position: absolute;
+  pointer-events: none;
+  text-shadow: 0 1px 4px #14383e;
+  font-size: 19px;
+  font-weight: 600;
+  transform: translate(-50%, -100%);
+}
+#ghostLabel {
+  color: #ffe2a2;
+  font-size: 13px;
+}
+#challengeBar {
+  position: absolute;
+  top: 103px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  background: #173d3d99;
+  border: 1px solid #e8e7c533;
+  border-radius: 20px;
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+#challengeBar button {
+  text-decoration: underline;
+  margin-left: 10px;
+  font-size: 12px;
+}
+#loading {
+  position: absolute;
+  inset: 0;
+  background: #123e45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 8;
+}
+.loading-ripple {
+  width: 60px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #f0eaca;
+  box-shadow:
+    0 0 0 10px #f0eaca11,
+    0 0 0 20px #f0eaca08;
+}
+#loading p {
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+#toast {
+  position: absolute;
+  left: 50%;
+  top: 140px;
+  transform: translateX(-50%);
+  max-width: min(90vw, 500px);
+  padding: 13px 20px;
+  background: #f5f0df;
+  color: #223e34;
+  border-radius: 14px;
+  font-size: 14px;
+  z-index: 12;
+  text-align: center;
+}
+dialog {
+  border: 1px solid #fff6;
+  border-radius: 24px;
+  padding: 34px;
+  background: #f4f0e7;
+  color: #223b31;
+  max-width: 470px;
+  width: calc(100% - 32px);
+  box-shadow: 0 25px 100px #0006;
+}
+dialog::backdrop {
+  background: #082c3755;
+  backdrop-filter: blur(8px);
+}
+dialog h2 {
+  font-size: 30px;
+  letter-spacing: -0.8px;
+  margin: 10px 0 16px;
+}
+dialog p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 26px;
+}
+.setting {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #234a3422;
+  padding: 15px 0;
+  font-size: 14px;
+}
+.setting select {
+  max-width: 200px;
+  border: 1px solid #234a3433;
+  padding: 8px;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+}
+.keyboard {
+  font-size: 13px;
+}
+.fine {
+  font-size: 12px !important;
+  color: #587063;
+}
+dialog label {
+  font-size: 14px;
+}
+dialog input[type="text"],
+#playerName,
+#challengeLink {
+  width: 100%;
+  border: 1px solid #20493640;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0 16px;
+  background: #fff7;
+  color: #223b31;
+}
+#shareDialog .link {
+  display: block;
+  margin: 12px auto;
+}
+body.preparing #launch {
+  background: none;
+}
+body.preparing .launch-label {
+  display: none;
+}
+body.flying #launch,
+body.result #launch,
+body.flying #throwPanel input {
+  pointer-events: none;
+}
+body.flying #launch,
+body.result #launch {
+  opacity: 0;
+}
+body.result #throwPanel,
+body.result #actions,
+body.result #feedback {
+  display: none;
+}
+@media (max-width: 1100px) {
+  h1 {
+    font-size: 34px;
+  }
+  .brand p {
+    font-size: 18px;
+  }
+  .conditions {
+    display: none;
+  }
+  .stones button {
+    width: 82px;
+  }
+  .stones {
+    left: 20px;
+    bottom: 30px;
+  }
+  #throwPanel {
+    width: 360px;
+  }
+  .scoreboard {
+    font-size: 12px;
+    gap: 12px;
+  }
+  #actions {
+    right: 20px;
+  }
+  .primary {
+    min-width: 155px;
+  }
+}
+@media (max-width: 1000px) {
+  header {
+    top: 22px;
+    left: 20px;
+    right: 18px;
+  }
+  h1 {
+    font-size: 31px;
+  }
+  .brand p {
+    font-size: 16px;
+  }
+  .utilities {
+    gap: 7px;
+  }
+  .icon {
+    width: 35px;
+    height: 35px;
+    font-size: 23px;
+  }
+  #settings {
+    display: block;
+  }
+  .scoreboard {
+    top: 90px;
+    gap: 18px;
+    font-size: 11px;
+  }
+  .scoreboard b {
+    font-size: 22px;
+    margin-left: 8px;
+  }
+  #challengeBar {
+    top: 145px;
+    font-size: 10px;
+  }
+  #launch {
+    left: 35%;
+    top: 54%;
+    width: 220px;
+  }
+  .launch-label {
+    font-size: 15px;
+  }
+  #throwPanel {
+    bottom: 151px;
+    width: min(88%, 410px);
+  }
+  .glass {
+    padding: 13px 19px 9px;
+  }
+  .tilt-row {
+    margin-top: 19px;
+  }
+  #instruction {
+    font-size: 12px;
+  }
+  #feedback {
+    bottom: 303px;
+    font-size: 18px;
+  }
+  .stones {
+    bottom: 30px;
+    left: 17px;
+    gap: 2px;
+  }
+  .stones button {
+    width: 65px;
+  }
+  .stone-art {
+    height: 48px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+  }
+  .stone-art:after {
+    inset: 12px 8px;
+  }
+  .thin:after {
+    inset: 18px 8px 10px;
+  }
+  .heavy:after {
+    inset: 8px;
+  }
+  .stones strong {
+    font-size: 11px;
+  }
+  .stones small {
+    font-size: 10px;
+  }
+  #actions {
+    right: 17px;
+    bottom: 38px;
+    gap: 9px;
+  }
+  .primary {
+    padding: 13px 18px;
+    font-size: 14px;
+    min-width: 130px;
+  }
+  .primary span {
+    display: none;
+  }
+  .link {
+    font-size: 12px;
+  }
+  #result {
+    bottom: 153px;
+    width: 285px;
+    padding: 20px 26px 14px;
+  }
+  #result h2 {
+    font-size: 33px;
+  }
+  body.result .stones {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #toast {
+    top: 180px;
+  }
+  #floating {
+    font-size: 17px;
+  }
+}
+@media (max-height: 620px) and (min-width: 761px) {
+  #throwPanel {
+    bottom: 15px;
+  }
+  .glass {
+    padding: 10px 20px;
+  }
+  .tilt-row {
+    margin-top: 14px;
+  }
+  #feedback {
+    bottom: 160px;
+  }
+  #result {
+    bottom: 20px;
+    padding: 15px 25px;
+  }
+  #result h2 {
+    font-size: 29px;
+  }
+  .stones,
+  #actions {
+    bottom: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+.stone-art.flat,
+.stone-art.thin {
+  background-image: url("assets/flat-slate.jpg");
+  background-size: cover;
+  background-position: center 65%;
+}
+.stone-art.flat:after,
+.stone-art.thin:after {
+  display: none;
+}
+.stone-art.thin {
+  filter: brightness(0.75);
+}
+.heavy:after {
+  background-image: url("assets/pebbles.jpg");
+  background-size: 180%;
+  background-position: 40% 60%;
+}
+.launch-stone {
+  background-image: url("assets/flat-slate.jpg");
+  background-size: 125%;
+  background-position: center 57%;
+  clip-path: polygon(
+    2% 40%,
+    12% 10%,
+    65% 0,
+    95% 22%,
+    100% 70%,
+    80% 96%,
+    28% 100%,
+    0 72%
+  );
+}
+#resultCount:focus {
+  outline: none;
+}
+#result h2 {
+  font-size: 40px;
+}
+#resultMessage {
+  font-size: 16px;
+}
+#resultDetail {
+  font-size: 14px;
+}
+
+@media (max-width: 1000px) {
+  .stones button {
+    width: 57px;
+  }
+  #actions .primary {
+    font-size: 13px;
+    padding: 13px 14px;
+    min-width: 125px;
+  }
+  .stones small {
+    font-size: 10px;
+  }
+}
+
+.stone-art.thin {
+  background-image: url("assets/thin-slate.jpg");
+  filter: none;
+}
+.stone-art.heavy {
+  background-image: url("assets/heavy-cream.jpg");
+  background-size: cover;
+  background-position: center 60%;
+}
+.stone-art.heavy:after {
+  display: none;
+}
+
+body.result #floating:before,
+body.result #ghostLabel:before {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 24px;
+  width: 1px;
+  background: currentColor;
+  left: 2px;
+  top: 11px;
+}

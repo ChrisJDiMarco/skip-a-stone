@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#153e3b" />
+    <title>Skip a stone.</title>
+    <meta
+      name="description"
+      content="Pick a stone. Find your release. Skip across a beautiful alpine lake and challenge a friend's best throw."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23153e3b'/%3E%3Cellipse cx='16' cy='23' rx='12' ry='4' fill='none' stroke='%23dce4cf'/%3E%3Cellipse cx='17' cy='13' rx='9' ry='4' transform='rotate(-20 17 13)' fill='%23dce4cf'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      { "imports": { "three": "./vendor/three.module.js" } }
+    </script>
+  </head>
+  <body>
+    <main id="game" aria-label="Stone skipping game">
+      <div id="view" aria-hidden="true"></div>
+      <div class="shade"></div>
+      <header>
+        <div class="brand">
+          <h1>Skip a stone.</h1>
+          <p>One more throw.</p>
+        </div>
+        <div class="scoreboard">
+          <span>YOU <b id="score">0</b></span
+          ><i>·</i><span id="ghostScore">YOUR BEST <b>—</b></span>
+        </div>
+        <div class="utilities">
+          <span class="conditions">≋ &nbsp; CALM WATER</span
+          ><button
+            id="sound"
+            class="icon"
+            aria-label="Turn sound on"
+            title="Sound"
+          >
+            ♪<span class="off">/</span></button
+          ><button
+            id="settings"
+            class="icon"
+            aria-label="Settings and how to play"
+          >
+            ☷</button
+          ><button id="reset" class="icon" aria-label="Start another throw">
+            ↻
+          </button>
+        </div>
+      </header>
+      <div id="challengeBar" hidden>
+        <span></span><button id="leave">Leave challenge</button>
+      </div>
+      <div id="floating" aria-hidden="true"></div>
+      <div id="ghostLabel" aria-hidden="true"></div>
+      <button
+        id="launch"
+        aria-label="Prepare a throw. Drag back for power and release when level."
+      >
+        <span class="launch-stone"></span
+        ><span class="launch-label"
+          >Pick your moment.<small>Drag back. Release when level.</small></span
+        >
+      </button>
+      <div id="feedback" role="status" aria-live="polite"></div>
+      <section class="stones" aria-label="Choose your stone">
+        <button data-stone="flat" aria-pressed="true">
+          <span class="stone-art flat"></span><strong>FLAT</strong
+          ><small>Forgiving</small></button
+        ><button data-stone="thin" aria-pressed="false">
+          <span class="stone-art thin"></span><strong>THIN</strong
+          ><small>More skips</small></button
+        ><button data-stone="heavy" aria-pressed="false">
+          <span class="stone-art heavy"></span><strong>HEAVY</strong
+          ><small>More distance</small>
+        </button>
+      </section>
+      <section id="throwPanel" aria-label="Throw controls">
+        <div class="glass">
+          <div class="power-row">
+            <label for="power">POWER <b id="powerValue">65%</b></label
+            ><input
+              id="power"
+              type="range"
+              min="10"
+              max="100"
+              value="65"
+              aria-label="Throw power"
+            />
+          </div>
+          <div class="tilt-row">
+            <span class="level-stone"></span>
+            <div class="track">
+              <span id="sweet"></span><span id="needle"></span>
+            </div>
+          </div>
+          <span class="level-label">LEVEL</span>
+        </div>
+        <p id="instruction">Pull back for power. Release when level.</p>
+      </section>
+      <div id="actions">
+        <button id="throw" class="primary">Prepare throw <span>↗</span></button
+        ><button class="share link" disabled>Challenge a friend</button>
+      </div>
+      <section id="result" hidden aria-label="Throw result">
+        <p id="resultEyebrow" class="eyebrow">YOUR THROW</p>
+        <h2 id="resultCount" tabindex="-1">0 skips</h2>
+        <p id="resultMessage"></p>
+        <hr />
+        <p id="resultDetail"></p>
+        <button id="again" class="primary dark">Throw again</button
+        ><button class="share link">Challenge a friend</button>
+      </section>
+      <div id="loading">
+        <span class="loading-ripple"></span>
+        <p>Finding a quiet spot…</p>
+      </div>
+      <div id="toast" role="status" aria-live="polite" hidden></div>
+      <dialog id="settingsDialog">
+        <button class="close" aria-label="Close settings">×</button>
+        <p class="eyebrow">A LITTLE PRACTICE GOES A LONG WAY</p>
+        <h2>Find your release.</h2>
+        <p>
+          Pull the stone back to set power. Move sideways to aim. Release as the
+          marker crosses the green band.
+        </p>
+        <p>
+          A harder throw travels farther, but the timing is tighter. A flat
+          release keeps your stone skipping.
+        </p>
+        <label class="setting"
+          >Timing<select id="timing">
+            <option value="standard">Standard</option>
+            <option value="relaxed">Relaxed · slower timing</option>
+          </select></label
+        ><label class="setting"
+          >Stationary camera<input id="still" type="checkbox" checked
+        /></label>
+        <p class="keyboard">
+          <b>Keyboard</b><br />1 / 2 / 3 choose a stone · ← → aim · ↑ ↓ power<br />Space
+          prepares, then throws · Esc cancels or pauses
+        </p>
+        <p class="fine">
+          Each stone and timing mode has its own best. Friend challenges use the
+          same conditions. Records stay on this device.
+        </p>
+        <button class="primary dark close-settings">Back to the lake</button>
+      </dialog>
+      <dialog id="shareDialog">
+        <button class="close" aria-label="Close challenge">×</button>
+        <p class="eyebrow">YOUR BEST THROW, THEIR NEXT CHALLENGE</p>
+        <h2>Beat this skip.</h2>
+        <p id="shareSummary"></p>
+        <label
+          >Your name
+          <input
+            id="playerName"
+            maxlength="24"
+            placeholder="Friend"
+            autocomplete="nickname" /></label
+        ><button id="copy" class="primary dark">Copy challenge link</button
+        ><button id="nativeShare" class="link">Share…</button
+        ><label id="linkFallback" hidden
+          >Challenge link<input id="challengeLink" readonly
+        /></label>
+        <p class="fine">
+          Your friend sees your actual throw beside theirs. No account needed.
+        </p>
+      </dialog>
+    </main>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
