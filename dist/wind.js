@@ -38,7 +38,7 @@ export function createFlightWind(context) {
       previous = level;
       const now = context.currentTime;
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(level * 0.22, now, level ? 0.18 : 0.06);
+      gain.gain.setTargetAtTime(level * 0.165, now, level ? 0.18 : 0.06);
       lowpass.frequency.cancelScheduledValues(now);
       lowpass.frequency.setTargetAtTime(650 + level * 1550, now, 0.2);
     },
