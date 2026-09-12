@@ -50,7 +50,8 @@ try {
 function updateEffectsVolume() {
   const silent = muted || effectsVolume === 0;
   $("#effectsVolume").value = String(Math.round(effectsVolume * 100));
-  $("#effectsVolumeValue").textContent = muted ? "Muted" : `${Math.round(effectsVolume * 100)}%`;
+  $("#effectsVolumeValue").textContent = `${Math.round(effectsVolume * 100)}%`;
+  $("#radio").volume = 0.35 * effectsVolume;
   $("#sound").setAttribute("aria-label", silent ? "Turn sound on" : "Turn sound off");
   $("#sound .off").hidden = !silent;
   if (effectsGain) {
@@ -785,7 +786,7 @@ try {
   flightEdge.setAttribute("aria-hidden", "true");
   $("#view").append(flightEdge);
   inspector = createRockInspector(rocks, selectStone);
-  setupRadio(toast);
+  setupRadio(toast, effectsVolume);
   $("#loading").remove();
   initChallenge();
   reset();
