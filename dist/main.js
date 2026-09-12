@@ -217,7 +217,7 @@ function reset() {
   $("#floating").textContent = "";
   $("#ghostLabel").textContent = "";
   $("#instruction").textContent =
-    "Drag to aim. Pull back for power. Release both markers in the green.";
+    "You set the power. Angle + body move automatically. Release when both are green.";
   tilt = body = 0;
   $("#needle").style.left = "50%";
   $("#bodyNeedle").style.left = "50%";
@@ -235,8 +235,8 @@ function prepare() {
   if (state !== "ready") return false;
   prepStart = performance.now();
   setState("preparing");
-  $("#feedback").textContent = "Find the green.";
-  $("#instruction").textContent = "Set power. Match angle + body. Release.";
+  $("#feedback").textContent = "Wait for both markers to reach green.";
+  $("#instruction").textContent = "Hold your pull. Watch angle + body move. Release when both are green.";
   unlockAudio();
   return true;
 }
@@ -839,7 +839,7 @@ try {
         $("#calmAim").dataset.aligned = String(aligned);
         $("#calmAim").style.setProperty("--power", `${power * 100}%`);
         $("#calmPower").textContent = `${Math.round(power * 100)}%`;
-        $("#calmAlignment").textContent = aligned ? "Release gently" : "Align ● + ◆";
+        $("#calmAlignment").textContent = aligned ? "Release now" : "Time ● + ◆";
         // Map each timing window into the same central green band.
         const markerPosition = (raw, band) => {
           const magnitude = Math.abs(raw);
@@ -852,8 +852,8 @@ try {
       }
       $("#feedback").textContent =
         tilt === 0 && body === 0
-          ? "Together. Let it fly."
-          : "Find your alignment.";
+          ? "Both green. Release now!"
+          : "Wait for angle + body to reach green.";
     }
     if (state === "flying") {
       playTime += Math.min(elapsed / 1000, 0.08) * 0.36;

@@ -1563,3 +1563,6 @@ body[data-calm="true"].preparing .guide-arc { stroke: #e1f1d8; stroke-width: 1.6
 #settingsDialog #effectsVolume { display: block; width: 100%; height: 36px; margin: 6px 0 0; accent-color: #2c674d; cursor: pointer; }
 #settingsDialog #effectsVolume:focus-visible { outline: 3px solid #245d46; outline-offset: 3px; border-radius: 6px; }
 #settingsDialog .effects-volume-card p { margin: 0; font-size: 11px; line-height: 1.5; color: #526b5e; }
+
+.control-deck .meter small b { font-weight: 700; color: #c6eab7; }
+.control-deck .power-meter small b { color: #f0f5e6; }
