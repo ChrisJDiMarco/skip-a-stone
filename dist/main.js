@@ -42,6 +42,26 @@ let state = "loading",
   pausedForDialog = false;
 const frameTimes = [];
 let lake, inspector;
+let effectsGain = null, effectsVolume = 1;
+try {
+  const saved = JSON.parse(localStorage.getItem("skip-stone-effects-volume") || "null");
+  if (typeof saved === "number" && Number.isFinite(saved)) effectsVolume = clamp(saved, 0, 1);
+} catch {}
+function updateEffectsVolume() {
+  const silent = muted || effectsVolume === 0;
+  $("#effectsVolume").value = String(Math.round(effectsVolume * 100));
+  $("#effectsVolumeValue").textContent = muted ? "Muted" : `${Math.round(effectsVolume * 100)}%`;
+  $("#sound").setAttribute("aria-label", silent ? "Turn sound on" : "Turn sound off");
+  $("#sound .off").hidden = !silent;
+  if (effectsGain) {
+    effectsGain.gain.cancelScheduledValues(audio.currentTime);
+    effectsGain.gain.setTargetAtTime(silent ? 0 : effectsVolume, audio.currentTime, 0.03);
+  }
+}
+function saveEffectsVolume() {
+  try { localStorage.setItem("skip-stone-effects-volume", JSON.stringify(effectsVolume)); } catch {}
+}
+updateEffectsVolume();
 let flightWind = null, flightEdge = null, edgeIntensity = 0;
 function quietFlight(fastStop = true) {
   flightWind?.update(0, fastStop);
@@ -325,6 +345,11 @@ function unlockAudio() {
   if (muted) return;
   try {
     audio ??= new AudioContext();
+    if (!effectsGain) {
+      effectsGain = audio.createGain();
+      effectsGain.gain.value = muted ? 0 : effectsVolume;
+      effectsGain.connect(audio.destination);
+    }
     if (audio.state === "suspended") audio.resume().catch(() => {});
   } catch {
     muted = true;
@@ -345,7 +370,7 @@ function splashSound(energy) {
   filter.frequency.value = 900 + energy * 45;
   const gain = audio.createGain();
   gain.gain.value = 0.1;
-  src.connect(filter).connect(gain).connect(audio.destination);
+  src.connect(filter).connect(gain).connect(effectsGain);
   src.start();
   src.onended = () => {
     src.disconnect();
@@ -364,7 +389,7 @@ function pointSound(points) {
     gain.gain.setValueAtTime(0, at);
     gain.gain.linearRampToValueAtTime(0.12, at + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.001, at + 0.18);
-    oscillator.connect(gain).connect(audio.destination);
+    oscillator.connect(gain).connect(effectsGain);
     oscillator.start(at);
     oscillator.stop(at + 0.19);
     oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
@@ -479,15 +504,22 @@ document.addEventListener("visibilitychange", () => {
   last = performance.now();
 });
 $("#sound").onclick = () => {
-  muted = !muted;
+  if (effectsVolume === 0) {
+    effectsVolume = 0.5;
+    muted = false;
+    saveEffectsVolume();
+  } else muted = !muted;
   if (muted) flightWind?.update(0, true);
-  $("#sound").setAttribute(
-    "aria-label",
-    muted ? "Turn sound on" : "Turn sound off",
-  );
-  $("#sound .off").hidden = !muted;
   unlockAudio();
+  updateEffectsVolume();
 };
+$("#effectsVolume").addEventListener("input", () => {
+  effectsVolume = clamp(Number($("#effectsVolume").value) / 100, 0, 1);
+  muted = false;
+  unlockAudio();
+  updateEffectsVolume();
+  saveEffectsVolume();
+});
 function openSettings() {
   if (state === "preparing") reset();
   pausedForDialog = state === "flying";
@@ -869,7 +901,7 @@ try {
     const rushing = state === "flying" && !document.hidden && !$("#settingsDialog").open
       ? Math.min(1, flightSpeed / 32) * coords.flightBlend : 0;
     if (rushing > 0 && !muted && audio?.state === "running" && !flightWind)
-      flightWind = createFlightWind(audio);
+      flightWind = createFlightWind(audio, effectsGain);
     const fastWindStop = muted || document.hidden || $("#settingsDialog").open
       || $("#still").checked || !["flying", "result"].includes(state);
     flightWind?.update(muted ? 0 : rushing, fastWindStop);

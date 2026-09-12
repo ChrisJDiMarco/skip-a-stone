@@ -1,5 +1,5 @@
 // A quiet, filtered stereo air rush, shared across throws.
-export function createFlightWind(context) {
+export function createFlightWind(context, output = context.destination) {
   const buffer = context.createBuffer(2, context.sampleRate * 4, context.sampleRate);
   for (let channel = 0; channel < 2; channel++) {
     const data = buffer.getChannelData(channel);
@@ -28,7 +28,7 @@ export function createFlightWind(context) {
   lowpass.Q.value = 0.5;
   const gain = context.createGain();
   gain.gain.value = 0;
-  source.connect(highpass).connect(lowpass).connect(gain).connect(context.destination);
+  source.connect(highpass).connect(lowpass).connect(gain).connect(output);
   source.start();
   let previous = "";
   return {
@@ -40,7 +40,7 @@ export function createFlightWind(context) {
       const now = context.currentTime;
       const fade = level ? 0.18 : fastStop ? 0.06 : 0.7;
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(level * 0.165, now, fade);
+      gain.gain.setTargetAtTime(level * 0.1, now, fade);
       lowpass.frequency.cancelScheduledValues(now);
       lowpass.frequency.setTargetAtTime(650 + level * 1550, now, level ? 0.2 : fade);
     },

@@ -1556,3 +1556,10 @@ body[data-calm="true"].preparing .guide-arc { stroke: #e1f1d8; stroke-width: 1.6
   -webkit-mask-image: linear-gradient(to right, #000 0%, #0009 10%, transparent 28%, transparent 72%, #0009 90%, #000 100%);
 }
 @media (prefers-reduced-motion: reduce) { .flight-edges { display: none; } }
+
+#settingsDialog .effects-volume-card { margin-top: 14px; padding: 16px 18px; border-radius: 18px; background: #dce8e0; }
+#settingsDialog .effects-volume-card label { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 16px; font-weight: 700; }
+#effectsVolumeValue { font-size: 13px; font-variant-numeric: tabular-nums; color: #426152; }
+#settingsDialog #effectsVolume { display: block; width: 100%; height: 36px; margin: 6px 0 0; accent-color: #2c674d; cursor: pointer; }
+#settingsDialog #effectsVolume:focus-visible { outline: 3px solid #245d46; outline-offset: 3px; border-radius: 6px; }
+#settingsDialog .effects-volume-card p { margin: 0; font-size: 11px; line-height: 1.5; color: #526b5e; }
