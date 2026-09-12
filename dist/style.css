@@ -1473,3 +1473,73 @@ body[data-calm="true"].preparing #calmAim { display: block; }
 body[data-calm="true"].preparing .trajectory-guide { display: block !important; opacity: .55; }
 body[data-calm="true"].preparing .trajectory-guide :is(.guide-glow, .landing-outer, .landing-inner, .landing-number, .landing-splash, .landing-final, .landing-pole, .landing-flag, .landing-caption, .aim-fan, .aim-ticks, .pull-line, .preview-caption) { display: none; }
 body[data-calm="true"].preparing .guide-arc { stroke: #e1f1d8; stroke-width: 1.6; stroke-dasharray: 1 9; animation-duration: 3s; }
+
+/* A compact, touch-friendly lake menu. Native controls retain keyboard behavior. */
+#settingsDialog {
+  width: min(620px, calc(100% - 24px));
+  max-width: 620px;
+  max-height: calc(100dvh - 24px);
+  padding: 26px;
+  border: 0;
+  border-radius: 28px;
+  background: #faf7ef;
+  color: #203f37;
+  overflow-y: auto;
+}
+#settingsDialog .settings-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+#settingsDialog .settings-kicker { margin: 0 0 4px; font-size: 10px; font-weight: 700; color: #577266; }
+#settingsDialog h2 { margin: 0; font-size: 38px; line-height: 1.15; letter-spacing: normal; text-wrap: balance; }
+#settingsDialog .close { position: static; flex: 0 0 44px; height: 44px; border-radius: 50%; background: #e9eee3; color: #25473c; font-size: 28px; }
+.settings-nav { display: flex; gap: 6px; padding: 5px; margin: 22px 0 18px; border-radius: 16px; background: #e9ede3; }
+.settings-nav button { flex: 1; min-height: 46px; padding: 10px; border-radius: 12px; font-size: 14px; font-weight: 700; color: #4f675d; }
+.settings-nav button[aria-pressed="true"] { background: #244e40; color: #fff9ed; box-shadow: 0 2px 4px #18382915; }
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#settingsDialog .lake-option { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-height: 182px; padding: 18px; border: 2px solid transparent; border-radius: 20px; color: #203f37; }
+#settingsDialog label.lake-option { cursor: pointer; }
+.option-mint { background: #d4edc3; }
+.option-blue { background: #d0e8f6; }
+.option-peach { background: #f8d9c8; }
+.option-yellow { background: #f4e7ad; }
+.option-icon { display: grid; place-items: center; width: 34px; height: 30px; font-size: 27px; line-height: 1; margin-bottom: 2px; }
+#settingsDialog .lake-option strong { font-size: 19px; line-height: 1.2; font-weight: 750; }
+.option-description { max-width: 230px; font-size: 12px; line-height: 1.45; color: #39584d; text-wrap: pretty; }
+.option-state { margin-top: auto; font-size: 11px; font-weight: 750; }
+.lake-option .state-on { display: none; }
+.lake-option:has(input:checked) .state-on { display: inline; }
+.lake-option:has(input:checked) .state-off { display: none; }
+#settingsDialog .lake-option input[type="checkbox"] { appearance: none; position: absolute; top: 18px; right: 18px; margin: 0; width: 46px; height: 28px; border-radius: 20px; border: 2px solid #38574738; background: #fff9; cursor: pointer; }
+#settingsDialog .lake-option input[type="checkbox"]::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; border-radius: 50%; background: #728879; }
+#settingsDialog .lake-option input:checked { background: #254f40; border-color: #254f40; }
+#settingsDialog .lake-option input:checked::after { transform: translateX(18px); background: #f3f8e9; }
+#settingsDialog .lake-option:has(input:focus-visible) { outline: 3px solid #245d46; outline-offset: 3px; }
+#settingsDialog .lake-option:hover { border-color: #34584630; }
+#settingsDialog .lake-option select { margin-top: auto; width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #344e3438; border-radius: 12px; background: #fff9; font: inherit; font-size: 13px; font-weight: 650; color: #244b3c; }
+#settingsDialog .lake-option:has(select:disabled) { opacity: .65; }
+#settingsDialog .settings-note { margin: 13px 4px 0; font-size: 11px; line-height: 1.5; color: #5b7164; text-wrap: pretty; }
+.settings-footer { position: sticky; bottom: -26px; padding-top: 18px; padding-bottom: 2px; background: #faf7ef; }
+#settingsDialog .close-settings { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 56px; padding: 16px 22px; border-radius: 16px; background: #254f40; color: #fff9ed; font-size: 17px; box-shadow: none; }
+#settingsDialog .close-settings span { font-size: 24px; }
+.lake-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.lake-steps li { display: flex; align-items: flex-start; gap: 14px; padding: 16px; background: #e9efdf; border-radius: 16px; }
+.lake-steps li:nth-child(2) { background: #dcebf3; }
+.lake-steps li:nth-child(3) { background: #f5e1ce; }
+.lake-steps li > span { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; background: #fff9; font-size: 16px; font-weight: 750; }
+.lake-steps strong { font-size: 17px; }
+#settingsDialog .lake-steps p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; text-wrap: pretty; }
+.settings-details { margin-top: 10px; padding: 0 14px; border-radius: 12px; background: #eeeee5; }
+.settings-details summary { cursor: pointer; min-height: 44px; padding: 13px 0; font-size: 13px; font-weight: 700; }
+#settingsDialog .settings-details p { margin: 0; padding-bottom: 14px; font-size: 12px; line-height: 1.6; }
+#settingsDialog a { color: #255742; text-decoration: underline; }
+#settingsDialog :is(button, select, summary):focus-visible { outline: 3px solid #245d46; outline-offset: 3px; }
+@media (max-width: 480px) {
+  #settingsDialog { padding: 18px; border-radius: 22px; }
+  #settingsDialog h2 { font-size: 32px; }
+  .settings-nav { margin-top: 18px; }
+  .settings-grid { gap: 9px; }
+  #settingsDialog .lake-option { padding: 13px; min-height: 190px; border-radius: 16px; }
+  #settingsDialog .lake-option strong { font-size: 17px; }
+  #settingsDialog .lake-option input[type="checkbox"] { top: 13px; right: 10px; }
+  .option-description { font-size: 11px; }
+  .settings-footer { bottom: -18px; }
+}
+@media (max-width: 340px) { .settings-grid { grid-template-columns: 1fr; } }

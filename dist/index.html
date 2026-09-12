@@ -175,42 +175,57 @@
         <div id="rockViewport" tabindex="0" role="img" aria-label="3D stone preview. Drag to rotate, or use arrow keys. Home resets the view."></div>
         <div class="rock-footer"><div><p class="rotate-hint">Drag to turn it over <span>· arrow keys also work</span></p><p id="rockDescription"></p></div><button id="useRock" class="primary">Use this stone ↗</button></div>
       </dialog>
-      <dialog id="settingsDialog">
-        <button class="close" aria-label="Close settings">×</button>
-        <p class="eyebrow">A LITTLE PRACTICE GOES A LONG WAY</p>
-        <h2>Find your release.</h2>
-        <p>
-          Pull the stone back to set power. Move sideways to aim. Release as the
-          angle and body markers cross their green bands. Sideways pull aims in
-          the opposite direction, like a slingshot.
-        </p>
-        <p>
-          A harder throw travels farther, but the timing is tighter. A flat
-          release keeps your stone skipping.
-        </p>
-        <label class="setting"
-          >Timing<select id="timing">
-            <option value="standard">Standard</option>
-            <option value="relaxed">Relaxed · slower timing</option>
-          </select></label
-        ><label class="setting"
-          >Stationary camera<input id="still" type="checkbox"
-        /></label>
-        <label class="setting">Flight trajectory<input id="flightTrajectory" type="checkbox" checked /></label>
-        <p class="fine">Show the dotted path and landing markers while your stone flies.</p>
-        <label class="setting">Calm mode<input id="calmMode" type="checkbox" /></label>
-        <p class="fine">A quiet lake with just Settings. Pull back the stone to reveal a subtle aiming path and one compact power and alignment guide. After each throw, gently return to shore automatically.</p>
-        <p class="keyboard">
-          <b>Keyboard</b><br />1–7 choose a stone · ← → aim · ↑ ↓ power<br />Space
-          prepares, then throws · Esc cancels or pauses
-        </p>
-        <p class="fine">
-          Each stone and timing mode has its own best. Friend challenges use the
-          same conditions. Boat points reward targets; skip records stay
-          separate. Records stay on this device.
-        </p>
-        <p class="fine">Music: <a href="https://filtermusic.net/yoga-sounds-by-fluxfm" target="_blank" rel="noopener noreferrer">Yoga Sounds by FluxFM</a>. The music button starts live radio; sound effects have their own toggle.</p>
-        <button class="primary dark close-settings">Back to the lake</button>
+      <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+        <div class="settings-top">
+          <div><p class="settings-kicker">MAKE YOURSELF AT HOME</p><h2 id="settingsTitle">Your lake.</h2></div>
+          <button class="close" aria-label="Close settings">×</button>
+        </div>
+        <nav class="settings-nav" aria-label="Settings pages">
+          <button type="button" data-settings-page="playSettings" aria-controls="playSettings" aria-pressed="true">Play your way</button>
+          <button type="button" data-settings-page="playHelp" aria-controls="playHelp" aria-pressed="false">How to play</button>
+        </nav>
+        <section id="playSettings" aria-label="Play your way">
+          <div class="settings-grid">
+            <label class="lake-option option-mint">
+              <input id="calmMode" type="checkbox" aria-describedby="calmDescription" />
+              <span class="option-icon" aria-hidden="true">≋</span>
+              <strong>Calm mode</strong>
+              <span id="calmDescription" class="option-description">Less on screen. A fresh stone after every throw.</span>
+              <span class="option-state" aria-hidden="true"><span class="state-on">On</span><span class="state-off">Off</span></span>
+            </label>
+            <label class="lake-option option-blue">
+              <input id="flightTrajectory" type="checkbox" checked aria-describedby="trajectoryDescription" />
+              <span class="option-icon" aria-hidden="true">↗</span>
+              <strong>Flight path</strong>
+              <span id="trajectoryDescription" class="option-description">See the dotted guide while your stone flies.</span>
+              <span class="option-state" aria-hidden="true"><span class="state-on">On</span><span class="state-off">Off</span></span>
+            </label>
+            <label class="lake-option option-peach">
+              <input id="still" type="checkbox" aria-describedby="cameraDescription" />
+              <span class="option-icon" aria-hidden="true">◎</span>
+              <strong>Stay on shore</strong>
+              <span id="cameraDescription" class="option-description">Keep the camera still instead of riding the stone.</span>
+              <span class="option-state" aria-hidden="true"><span class="state-on">On</span><span class="state-off">Off</span></span>
+            </label>
+            <div class="lake-option option-yellow">
+              <span class="option-icon" aria-hidden="true">◷</span>
+              <label for="timing"><strong>Your pace</strong></label>
+              <span class="option-description">Choose how quickly the alignment markers move.</span>
+              <select id="timing" aria-label="Throw timing"><option value="standard">Standard</option><option value="relaxed">Relaxed · slower</option></select>
+            </div>
+          </div>
+          <p class="settings-note">Calm mode keeps a small aiming guide while you pull back.</p>
+        </section>
+        <section id="playHelp" aria-label="How to play" hidden>
+          <ol class="lake-steps">
+            <li><span>1</span><div><strong>Pick & pull</strong><p>Choose a stone. Drag it back to build power.</p></div></li>
+            <li><span>2</span><div><strong>Find your line</strong><p>Move sideways to aim in the opposite direction, like a slingshot.</p></div></li>
+            <li><span>3</span><div><strong>Meet in the green</strong><p>Release when angle and body line up. More power makes timing tighter.</p></div></li>
+          </ol>
+          <details class="settings-details"><summary>Keyboard shortcuts</summary><p>1–7 choose a stone · ← → aim · ↑ ↓ power<br />Space prepares, then throws · Esc cancels or pauses.</p></details>
+          <details class="settings-details"><summary>Scores, challenges & music</summary><p>Hit boats for bonus points. Each stone and timing mode has its own best, saved on this device. Friend challenges use matching conditions.</p><p>Music plays <a href="https://filtermusic.net/yoga-sounds-by-fluxfm" target="_blank" rel="noopener noreferrer">Yoga Sounds by FluxFM</a>. Music and sound effects have separate buttons at the lake.</p></details>
+        </section>
+        <div class="settings-footer"><button class="primary dark close-settings">Back to the lake <span aria-hidden="true">↗</span></button></div>
       </dialog>
       <dialog id="shareDialog">
         <button class="close" aria-label="Close challenge">×</button>

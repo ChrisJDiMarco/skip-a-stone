@@ -489,6 +489,15 @@ $$("dialog .close").forEach(
   (b) => (b.onclick = () => b.closest("dialog").close()),
 );
 $(".close-settings").onclick = () => $("#settingsDialog").close();
+for (const button of $$("[data-settings-page]")) {
+  button.onclick = () => {
+    for (const item of $$("[data-settings-page]")) {
+      const selected = item === button;
+      item.setAttribute("aria-pressed", String(selected));
+      $("#" + item.dataset.settingsPage).hidden = !selected;
+    }
+  };
+}
 for (const id of ["calmMode", "flightTrajectory"]) {
   $("#" + id).onchange = () => {
     calmMode = $("#calmMode").checked;
