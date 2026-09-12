@@ -90,6 +90,8 @@
 </div><span class="stone-scroll-hint">Scroll to explore · 7 stones ↔</span></section>
       <section id="throwPanel" aria-label="Throw controls">
         <div class="glass control-deck">
+          <div class="manual-controls" role="group" aria-labelledby="manualControlTitle">
+          <p class="control-group-title" id="manualControlTitle">YOU CONTROL</p>
           <div class="meter power-meter">
             <label for="power">POWER <b id="powerValue">65%</b></label
             ><input
@@ -99,8 +101,12 @@
               max="100"
               value="65"
               aria-label="Throw power"
-            /><small><b>You control</b> · Pull back</small>
+            /><small>Pull back or drag slider</small>
           </div>
+          </div>
+          <div class="timing-controls" role="group" aria-labelledby="timingControlTitle">
+          <p class="control-group-title" id="timingControlTitle">TIME YOUR RELEASE</p>
+          <div class="timing-meters">
           <div class="meter">
             <div class="meter-label">ANGLE <b id="angleValue">18°</b></div>
             <div
@@ -114,7 +120,6 @@
             >
               <span id="sweet"></span><span id="needle"></span>
             </div>
-            <small><b>Time it</b> · Auto-moving</small>
           </div>
           <div class="meter">
             <div class="meter-label">BODY <b id="bodyValue">Centered</b></div>
@@ -129,7 +134,9 @@
             >
               <span class="body-sweet"></span><span id="bodyNeedle"></span>
             </div>
-            <small><b>Time it</b> · Auto-moving</small>
+          </div>
+          </div>
+          <p class="timing-control-hint">Auto-moving · release when both are green</p>
           </div>
           <p id="instruction">
             You set the power. Angle + body move automatically. Release when both are green.

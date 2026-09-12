@@ -1566,3 +1566,72 @@ body[data-calm="true"].preparing .guide-arc { stroke: #e1f1d8; stroke-width: 1.6
 
 .control-deck .meter small b { font-weight: 700; color: #c6eab7; }
 .control-deck .power-meter small b { color: #f0f5e6; }
+
+/* Separate the adjustable slider from the two read-only timing gauges. */
+#throwPanel .control-deck {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr);
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.manual-controls, .timing-controls {
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid #d6e7e746;
+  background: #1b3439ed;
+  box-shadow: 0 6px 22px #0b25252b;
+}
+.manual-controls { background: #30453cec; border-color: #d7efbc75; }
+.control-deck .control-group-title {
+  margin: 0 0 14px;
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #bdcec9;
+}
+.manual-controls .control-group-title { color: #d2e8b8; }
+.timing-meters { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.control-deck .meter { padding: 0; border: 0; }
+.control-deck .timing-meters .meter { cursor: default; }
+.control-deck .meter label, .control-deck .meter-label { margin-bottom: 15px; font-size: 11px; }
+.control-deck .meter small, .control-deck .timing-control-hint {
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 14px 0 0;
+  color: #c5d6cc;
+}
+.control-deck .timing-control-hint { text-align: center; }
+.control-deck .timing-meters .track { height: 4px; background: #afc5c344; }
+.control-deck #needle, .control-deck #bodyNeedle {
+  width: 3px;
+  height: 18px;
+  top: -7px;
+  border-radius: 2px;
+  box-shadow: none;
+}
+/* Keep the fuller state-specific instruction available to assistive technology. */
+#throwPanel #instruction {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 760px) {
+  #throwPanel .control-deck { gap: 8px; }
+  .manual-controls, .timing-controls { padding: 12px 10px; border-radius: 15px; }
+  .control-deck .control-group-title { font-size: 8px; margin-bottom: 10px; }
+  .timing-meters { gap: 12px; }
+  .control-deck .meter label, .control-deck .meter-label { font-size: 9px; }
+  .control-deck .meter small, .control-deck .timing-control-hint { font-size: 9px; }
+}
