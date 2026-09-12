@@ -727,6 +727,7 @@ export async function createLake(container, rocks) {
     });
     return {
       launch: ["ready", "preparing"].includes(state) ? launchBounds() : null,
+      flightBlend: flight ? cameraBlend : 0,
       player: project(stone.position),
       ghost: ghostReplay && !flight ? project(ghost.position) : null,
     };

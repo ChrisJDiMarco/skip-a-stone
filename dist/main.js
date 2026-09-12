@@ -1,6 +1,7 @@
 import { loadRockAssets } from "./rocks.js";
 import { createRockInspector } from "./rock-inspector.js";
 import { setupRadio } from "./radio.js";
+import { createFlightWind } from "./wind.js";
 import { createLake } from "./scene.js";
 import {
   STONES,
@@ -41,6 +42,16 @@ let state = "loading",
   pausedForDialog = false;
 const frameTimes = [];
 let lake, inspector;
+let flightWind = null, flightEdge = null, edgeIntensity = 0;
+function quietFlight() {
+  flightWind?.update(0);
+  if (flightEdge) flightEdge.style.opacity = "0";
+  edgeIntensity = 0;
+}
+addEventListener("pagehide", () => {
+  flightWind?.dispose();
+  flightWind = null;
+});
 let calmMode = false, flightTrajectory = true, calmResultTime = 0;
 try {
   const preferences = JSON.parse(localStorage.getItem("skip-stone-view-v1") || "{}");
@@ -108,6 +119,7 @@ function updateScore() {
 }
 function setState(value) {
   state = value;
+  if (value !== "flying") quietFlight();
   document.body.className = value;
   $("#game").dataset.state = value;
   $("#result").hidden = value !== "result";
@@ -467,6 +479,7 @@ document.addEventListener("visibilitychange", () => {
 });
 $("#sound").onclick = () => {
   muted = !muted;
+  if (muted) flightWind?.update(0);
   $("#sound").setAttribute(
     "aria-label",
     muted ? "Turn sound on" : "Turn sound off",
@@ -514,11 +527,13 @@ $("#timing").onchange = () => {
   mode = $("#timing").value;
   reset();
 };
-$("#still").onchange = () =>
+$("#still").onchange = () => {
+  quietFlight();
   lake.setStationary(
     matchMedia("(prefers-reduced-motion: reduce)").matches ||
       $("#still").checked,
   );
+};
 $("#leave").onclick = () => {
   history.replaceState(null, "", location.pathname + location.search);
   challenge = null;
@@ -732,6 +747,10 @@ function registerTools() {
 try {
   const rocks = await loadRockAssets();
   lake = await createLake($("#view"), rocks);
+  flightEdge = document.createElement("div");
+  flightEdge.className = "flight-edges";
+  flightEdge.setAttribute("aria-hidden", "true");
+  $("#view").append(flightEdge);
   inspector = createRockInspector(rocks, selectStone);
   setupRadio(toast);
   $("#loading").remove();
@@ -756,6 +775,7 @@ try {
   );
   function frame(now) {
     const elapsed = now - last;
+    let flightSpeed = 0;
     last = now;
     if (calmMode && state === "result" && !document.hidden && !$("#settingsDialog").open) {
       calmResultTime += Math.min(elapsed, 80);
@@ -826,8 +846,9 @@ try {
       );
       const a = replay.samples[Math.max(0, sampleIndex - 1)],
         b = replay.samples[sampleIndex];
+      flightSpeed = playTime >= replay.duration ? 0 : Math.hypot(b.x - a.x, b.z - a.z) * 120;
       $("#speedValue").textContent =
-        `${Math.round(playTime >= replay.duration ? 0 : Math.hypot(b.x - a.x, b.z - a.z) * 120 * 2.237)} mph`;
+        `${Math.round(flightSpeed * 2.237)} mph`;
       $("#flightAngle").textContent =
         `${Math.round(18 + replay.input.tilt * 14)}°`;
       $("#flightSkips").textContent = $("#score").textContent;
@@ -844,6 +865,14 @@ try {
       targetClock,
       calmMode,
     );
+    const rushing = state === "flying" && !document.hidden && !$("#settingsDialog").open
+      ? Math.min(1, flightSpeed / 32) * coords.flightBlend : 0;
+    if (rushing > 0 && !muted && audio?.state === "running" && !flightWind)
+      flightWind = createFlightWind(audio);
+    flightWind?.update(muted ? 0 : rushing);
+    const edgeTarget = reduce ? 0 : rushing * 0.7;
+    edgeIntensity += (edgeTarget - edgeIntensity) * (1 - Math.exp(-Math.min(elapsed, 80) / 180));
+    flightEdge.style.opacity = String(edgeIntensity);
     if (coords?.launch && ["ready", "preparing"].includes(state)) {
       $("#launch").style.left = `${coords.launch.x}px`;
       $("#launch").style.top = `${coords.launch.y}px`;

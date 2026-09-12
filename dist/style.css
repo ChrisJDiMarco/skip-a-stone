@@ -1543,3 +1543,16 @@ body[data-calm="true"].preparing .guide-arc { stroke: #e1f1d8; stroke-width: 1.6
   .settings-footer { bottom: -18px; }
 }
 @media (max-width: 340px) { .settings-grid { grid-template-columns: 1fr; } }
+
+/* A fixed blur at the periphery; only its opacity follows flight speed. */
+.flight-edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  mask-image: linear-gradient(to right, #000 0%, #0009 10%, transparent 28%, transparent 72%, #0009 90%, #000 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #0009 10%, transparent 28%, transparent 72%, #0009 90%, #000 100%);
+}
+@media (prefers-reduced-motion: reduce) { .flight-edges { display: none; } }
