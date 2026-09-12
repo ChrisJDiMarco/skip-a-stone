@@ -153,6 +153,7 @@ function initChallenge() {
 }
 function reset() {
   drag = null;
+  delete $("#game").dataset.pull;
   replay = null;
   ghost = null;
   playTime = 0;
@@ -334,6 +335,7 @@ $("#launch").addEventListener("pointermove", (e) => {
     dy = e.clientY - drag.y;
   drag.moved ||= Math.hypot(dx, dy) > 9;
   if (!drag.moved) return;
+  $("#game").dataset.pull = `${e.clientX},${e.clientY}`;
   heading = clamp(Math.atan2(-dx, Math.max(35, dy)), -0.4, 0.7);
   setPower(
     0.1 +
@@ -344,6 +346,7 @@ $("#launch").addEventListener("pointermove", (e) => {
 $("#launch").addEventListener("pointerup", (e) => {
   if (!drag || e.pointerId !== drag.id) return;
   const moved = drag.moved;
+  delete $("#game").dataset.pull;
   drag = null;
   if ($("#launch").hasPointerCapture(e.pointerId))
     $("#launch").releasePointerCapture(e.pointerId);

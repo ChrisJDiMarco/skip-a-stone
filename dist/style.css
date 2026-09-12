@@ -1221,3 +1221,106 @@ body.paused #floating {
     text-align: center;
   }
 }
+.trajectory-guide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.guide-arc,
+.guide-glow {
+  fill: none;
+  stroke: #e7fcff;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-dasharray: 2 7;
+}
+.guide-glow {
+  stroke: #72dcff;
+  stroke-width: 6;
+  filter: url(#guideGlow);
+  opacity: 0.5;
+}
+.landing-outer,
+.landing-inner {
+  fill: #91e8ff0b;
+  stroke: #dcfaff;
+  stroke-width: 1.7;
+}
+.landing-inner {
+  fill: none;
+  stroke-width: 1;
+  opacity: 0.55;
+}
+.landing-number {
+  fill: #f2feff;
+  font: 600 17px system-ui;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #22495477;
+  stroke-width: 3;
+}
+.landing-final {
+  fill: #c1f3ff12;
+  stroke: #f4fcff;
+  stroke-width: 1.8;
+  stroke-dasharray: 5 5;
+}
+.landing-pole {
+  fill: none;
+  stroke: #f4fcff;
+  stroke-width: 1.8;
+}
+.landing-flag {
+  fill: #f4fcff;
+}
+.landing-caption,
+.preview-caption {
+  fill: #ebfcff;
+  font: 600 10px system-ui;
+  letter-spacing: 0.07em;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #16444bb0;
+  stroke-width: 3;
+}
+.aim-fan,
+.aim-ticks {
+  fill: none;
+  stroke: #e6fcff;
+  stroke-width: 1.2;
+  opacity: 0.7;
+}
+.pull-line {
+  fill: none;
+  stroke: #fff0c5;
+  stroke-width: 2;
+  stroke-dasharray: 4 5;
+}
+body.flying .guide-arc {
+  stroke-width: 2.4;
+}
+body.flying .landing-number {
+  font-size: 19px;
+}
+@media (max-width: 760px) {
+  .preview-caption {
+    visibility: hidden;
+  }
+  .landing-caption,
+  .preview-caption {
+    font-size: 8px;
+  }
+  .landing-number {
+    font-size: 13px;
+  }
+  .guide-arc {
+    stroke-width: 1.6;
+  }
+  .guide-glow {
+    stroke-width: 3;
+  }
+}
+.landing-splash{fill:none;stroke:#f2ffff;stroke-width:1.4;stroke-linecap:round;opacity:.8}.landing-outer{stroke-width:2;fill:#c8f4ff12}

@@ -1,5 +1,7 @@
 import * as THREE from "three";
-import { positionAt, simulate, TARGETS, targetPosition } from "./simulation.js";
+import { createBoats } from "./boats.js";
+import { createTrajectoryGuide } from "./trajectory.js";
+import { positionAt, simulate, targetPosition } from "./simulation.js";
 export async function createLake(container) {
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -98,15 +100,16 @@ export async function createLake(container) {
  color+=vec3(1.,.68,.3)*sunline*sparkle*.12*waterMask;
  // In stone view, shade world-space water so ripples travel beneath the camera.
  vec3 eye=normalize(cameraPosition-wp);
- vec3 waveNormal=normalize(vec3(n.x*.27,1.,n.y*.27));
+ vec3 waveNormal=normalize(vec3(n.x*.17,1.,n.y*.17));
  float facing=pow(1.-max(dot(eye,waveNormal),0.),3.);
  vec3 reflected=reflect(-eye,waveNormal);
  vec2 skyUV=vec2(clamp(.5+reflected.x*.45,.02,.98),clamp(.67+abs(reflected.y)*.28,.67,.99));
  vec3 skyColor=texture2D(land,skyUV).rgb;
- vec3 lakeColor=mix(vec3(.013,.12,.15),skyColor,.42+facing*.48);
+ vec3 lakeColor=mix(vec3(.013,.12,.15),skyColor,.34+facing*.48);
  vec3 halfway=normalize(eye+normalize(vec3(.65,.22,-.35)));
  float spec=pow(max(dot(waveNormal,halfway),0.),180.);
  lakeColor+=vec3(1.,.74,.38)*spec*1.2;
+ lakeColor+=vec3(1.,.67,.3)*pow(clamp((n.y+.23)*2.6,0.,1.),5.)*sunline*.5;
  lakeColor+=vec3(.05,.11,.12)*(waveSlope*.16+n.y*.25);
  float horizonFade=smoothstep(65.,190.,length(wp.xz-cameraPosition.xz));
  lakeColor=mix(lakeColor,vec3(.32,.42,.45),horizonFade*.55);
@@ -116,7 +119,7 @@ export async function createLake(container) {
   );
   water.rotation.x = -Math.PI / 2;
   scene.add(water);
-  scene.add(new THREE.HemisphereLight(0xd9efff, 0x283b31, 2));
+  scene.add(new THREE.HemisphereLight(0xd9efff, 0x283b31, 1.35));
   const sun = new THREE.DirectionalLight(0xffd494, 3.1);
   sun.position.set(25, 15, -20);
   scene.add(sun);
@@ -155,10 +158,12 @@ export async function createLake(container) {
   geo.computeVertexNormals();
   const stone = new THREE.Mesh(
     geo,
-    new THREE.MeshStandardMaterial({
-      color: 0x465356,
-      roughness: 0.36,
-      metalness: 0.1,
+    new THREE.MeshPhysicalMaterial({
+      color: 0x657577,
+      roughness: 0.24,
+      metalness: 0.04,
+      clearcoat: 1,
+      clearcoatRoughness: 0.16,
       map: bed,
     }),
   );
@@ -273,6 +278,16 @@ export async function createLake(container) {
         depthWrite: false,
       }),
     );
+    splash.material.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <fog_vertex>",
+        "#include <fog_vertex>\n gl_PointSize=min(gl_PointSize,4.5);",
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <clipping_planes_fragment>",
+        "#include <clipping_planes_fragment>\n float dropletRadius=length(gl_PointCoord-.5);if(dropletRadius>.5)discard;",
+      );
+    };
     group.add(splash);
     const crown = new THREE.Mesh(
       crownGeo,
@@ -312,113 +327,34 @@ export async function createLake(container) {
   ghostTrail.frustumCulled = false;
   ghostTrail.visible = false;
   scene.add(ghostTrail);
-  const boats = TARGETS.map((target) => {
-    const group = new THREE.Group();
-    const hullShape = new THREE.Shape();
-    hullShape.moveTo(-0.85, -0.36);
-    hullShape.lineTo(0.58, -0.36);
-    hullShape.lineTo(1.05, 0);
-    hullShape.lineTo(0.58, 0.36);
-    hullShape.lineTo(-0.85, 0.36);
-    hullShape.closePath();
-    const hull = new THREE.Mesh(
-      new THREE.ExtrudeGeometry(hullShape, {
-        depth: 0.25,
-        bevelEnabled: true,
-        bevelSize: 0.06,
-        bevelThickness: 0.06,
-        bevelSegments: 2,
-        steps: 1,
-      }),
-      new THREE.MeshStandardMaterial({
-        color: target.color,
-        roughness: 0.3,
-        metalness: 0.12,
-      }),
-    );
-    hull.rotation.x = -Math.PI / 2;
-    group.add(hull);
-    const mast = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.025, 0.025, 1.4, 8),
-      new THREE.MeshStandardMaterial({ color: 0xeedabc, roughness: 0.5 }),
-    );
-    mast.position.y = 0.85;
-    group.add(mast);
-    const sailGeo = new THREE.BufferGeometry();
-    sailGeo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(
-        [0.035, 0.3, 0, 0.035, 1.5, 0, 0.83, 0.3, 0],
-        3,
-      ),
-    );
-    sailGeo.computeVertexNormals();
-    const sail = new THREE.Mesh(
-      sailGeo,
-      new THREE.MeshStandardMaterial({
-        color: 0xfff4d9,
-        roughness: 0.75,
-        side: THREE.DoubleSide,
-      }),
-    );
-    group.add(sail);
-    const wake = new THREE.Mesh(
-      new THREE.RingGeometry(0.9, 1, 48),
-      new THREE.MeshBasicMaterial({
-        color: 0xd9f9fa,
-        transparent: true,
-        opacity: 0.32,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      }),
-    );
-    wake.rotation.x = -Math.PI / 2;
-    wake.scale.set(1.4, 0.55, 1);
-    wake.position.y = 0.025;
-    group.add(wake);
-    const labelCanvas = document.createElement("canvas");
-    labelCanvas.width = 256;
-    labelCanvas.height = 96;
-    const ctx = labelCanvas.getContext("2d");
-    ctx.fillStyle = "#12313ed9";
-    ctx.beginPath();
-    ctx.roundRect(30, 10, 196, 64, 25);
-    ctx.fill();
-    ctx.fillStyle = "#fff1c4";
-    ctx.font = "600 38px system-ui";
-    ctx.textAlign = "center";
-    ctx.fillText(`+${target.points}`, 128, 55);
-    const labelTexture = new THREE.CanvasTexture(labelCanvas);
-    labelTexture.colorSpace = THREE.SRGBColorSpace;
-    const label = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: labelTexture,
-        transparent: true,
-        depthWrite: false,
-      }),
-    );
-    label.position.y = 2;
-    label.scale.set(1.7, 0.64, 1);
-    group.add(label);
-    scene.add(group);
-    return { target, group, wake };
-  });
-  const previewGeo = new THREE.BufferGeometry();
-  previewGeo.setAttribute(
+  const sprayPositions = new Float32Array(180 * 3),
+    sprayGeo = new THREE.BufferGeometry();
+  sprayGeo.setAttribute(
     "position",
-    new THREE.BufferAttribute(new Float32Array(1801 * 3), 3),
+    new THREE.BufferAttribute(sprayPositions, 3),
   );
-  const previewLine = new THREE.Line(
-    previewGeo,
-    new THREE.LineBasicMaterial({
-      color: 0xd3f8ff,
+  const skimSpray = new THREE.Points(
+    sprayGeo,
+    new THREE.PointsMaterial({
+      color: 0xfff9e7,
+      size: 3,
+      sizeAttenuation: false,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.8,
       depthWrite: false,
     }),
   );
-  previewLine.frustumCulled = false;
-  scene.add(previewLine);
+  skimSpray.material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <clipping_planes_fragment>",
+      "#include <clipping_planes_fragment>\n if(length(gl_PointCoord-.5)>.48)discard;",
+    );
+  };
+  skimSpray.frustumCulled = false;
+  scene.add(skimSpray);
+  const boats = await createBoats(scene, loader);
+  const trajectoryGuide = createTrajectoryGuide(container);
+  let guideReplay = null;
   let previewKey = "";
   const shorePosition = new THREE.Vector3(1.1, 4.2, 14),
     shoreLook = new THREE.Vector3(1.1, -3.5, -28);
@@ -492,14 +428,22 @@ export async function createLake(container) {
       camera.position
         .copy(shorePosition)
         .lerp(
-          new THREE.Vector3(p.x - dx * 1.65, 1.0 + p.y * 0.25, p.z - dz * 1.65),
+          new THREE.Vector3(
+            p.x - dx * 1.25 - dz * 0.65,
+            1.1 + p.y * 0.18,
+            p.z - dz * 1.25 + dx * 0.65,
+          ),
           cameraBlend,
         );
       camera.lookAt(
         shoreLook
           .clone()
           .lerp(
-            new THREE.Vector3(p.x + dx * 16, -2.8, p.z + dz * 16),
+            new THREE.Vector3(
+              p.x + Math.sin(current.input.heading - 0.42) * 16,
+              -1.8,
+              p.z - Math.cos(current.input.heading - 0.42) * 16,
+            ),
             cameraBlend,
           ),
       );
@@ -511,7 +455,7 @@ export async function createLake(container) {
     const boatTime = current
       ? current.input.phase + Math.min(playTime, current.duration)
       : targetTime;
-    for (const { target, group, wake } of boats) {
+    for (const { target, group, wake, label, sails } of boats) {
       const p = targetPosition(target, boatTime),
         hit = current?.hits.find((h) => h.id === target.id && h.t <= playTime);
       group.position.set(
@@ -530,14 +474,18 @@ export async function createLake(container) {
         group.position.y -= fall * 0.7;
         group.rotation.z = fall * 1.4;
       }
-      wake.material.opacity = 0.2 + Math.sin(boatTime * 3) * 0.07;
+      wake.material.opacity = 0.28 + Math.sin(boatTime * 3) * 0.06;
+      sails.rotation.y = Math.sin(boatTime * 0.8 + target.offset) * 0.045;
+      const labelDistance = camera.position.distanceTo(group.position);
+      label.visible = labelDistance > 5;
+      label.scale.setScalar(Math.min(1, labelDistance / 14));
     }
-    previewLine.visible = ["ready", "preparing"].includes(state) || !!flight;
-    if (["ready", "preparing"].includes(state)) {
+    const guiding = ["ready", "preparing"].includes(state);
+    if (guiding) {
       const key = `${heading.toFixed(3)}:${power.toFixed(3)}:${selected}`;
       if (key !== previewKey) {
         previewKey = key;
-        const r = simulate({
+        guideReplay = simulate({
           stone: selected,
           mode: "standard",
           heading,
@@ -546,25 +494,9 @@ export async function createLake(container) {
           body: 0,
           phase: 0,
         });
-        r.samples.forEach((p, i) =>
-          previewGeo.attributes.position.setXYZ(i, p.x, p.y + 0.025, p.z),
-        );
-        previewGeo.attributes.position.needsUpdate = true;
-        previewGeo.setDrawRange(0, r.samples.length);
       }
-    } else if (flight) {
-      current.samples.forEach((p, i) =>
-        previewGeo.attributes.position.setXYZ(i, p.x, p.y + 0.025, p.z),
-      );
-      previewGeo.attributes.position.needsUpdate = true;
-      const start = Math.floor(playTime * 120);
-      previewGeo.setDrawRange(
-        start,
-        Math.max(0, current.samples.length - start),
-      );
-      previewKey = "";
     }
-    aim.visible = preparing;
+    aim.visible = false;
     aimArrow.visible = ["ready", "preparing"].includes(state);
     aimArrow.position.set(
       -3 + Math.sin(heading) * 3,
@@ -578,6 +510,7 @@ export async function createLake(container) {
     ghostTrail.visible = !!(
       current &&
       ghostReplay &&
+      !flight &&
       ["flying", "paused", "result"].includes(state)
     );
     if (ghostTrail.visible)
@@ -611,10 +544,10 @@ export async function createLake(container) {
         (state === "result" && current.skips > 0) ||
         playTime < current.duration + 0.15;
       stone.position.set(p.x, p.y, p.z);
-      stone.rotation.set(0.05, playTime * 19, 0.05);
-      stone.material.color.set(selected === "heavy" ? 0xada28a : 0x485558);
+      stone.rotation.set(0.035, playTime * 15, 0.025);
+      stone.material.color.set(selected === "heavy" ? 0xada28a : 0x718083);
       const size = flight
-        ? 0.6
+        ? 0.9
         : 0.31 + camera.position.distanceTo(stone.position) * 0.012;
       stone.scale.set(
         size,
@@ -656,7 +589,12 @@ export async function createLake(container) {
       [current, false],
       [ghostReplay, true],
     ]) {
-      if (!r || !current || !["flying", "result", "paused"].includes(state))
+      if (
+        (flight && isGhost) ||
+        !r ||
+        !current ||
+        !["flying", "result", "paused"].includes(state)
+      )
         continue;
       for (const ev of r.events) {
         if (index >= effects.length) break;
@@ -708,13 +646,50 @@ export async function createLake(container) {
           Math.max(1, ev.energy / 12),
           Math.max(1, ev.energy / 17),
         );
-        fx.splash.material.opacity = isGhost ? 0.3 : 0.95;
+        fx.splash.material.opacity = isGhost ? 0.3 : flight ? 0.7 : 0.95;
         fx.splash.material.color.set(isGhost ? 0xffdf95 : 0xf3fff7);
       }
     }
     for (; index < effects.length; index++)
       effects[index].group.visible = false;
+    const impact = current?.events
+      .filter((e) => e.kind === "skip" && e.t <= playTime)
+      .at(-1);
+    const sprayAge = impact ? playTime - impact.t : 1;
+    skimSpray.visible = !!(
+      flight &&
+      impact &&
+      sprayAge < 0.28 &&
+      playTime < current.duration
+    );
+    if (skimSpray.visible) {
+      const dx = Math.sin(current.input.heading),
+        dz = -Math.cos(current.input.heading);
+      for (let i = 0; i < 180; i++) {
+        const f = (Math.sin(i * 173.3) * 43758.54) % 1,
+          j = Math.abs(f),
+          side = i % 2 ? 1 : -1,
+          life = sprayAge + 0.025;
+        const lateral = side * (0.32 + j * 0.38 + life * (0.3 + j)),
+          back = 0.2 + j * 0.9;
+        sprayPositions[i * 3] = impact.x - dz * lateral - dx * back;
+        sprayPositions[i * 3 + 1] =
+          0.03 + life * (0.8 + j * 3) - 4.9 * life * life;
+        sprayPositions[i * 3 + 2] = impact.z + dx * lateral - dz * back;
+      }
+      sprayGeo.attributes.position.needsUpdate = true;
+      skimSpray.material.opacity = 0.85 * (1 - sprayAge / 0.28);
+    }
     renderer.render(scene, camera);
+    trajectoryGuide.update(guiding ? guideReplay : current, {
+      state,
+      playTime,
+      camera,
+      width: innerWidth,
+      height: innerHeight,
+      guiding,
+      reduced: t === 0,
+    });
     return {
       launch: project({ x: -3, y: 0.13, z: 3 }),
       player: project(stone.position),
