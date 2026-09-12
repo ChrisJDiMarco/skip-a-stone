@@ -19,7 +19,7 @@ export async function createLake(container, rocks) {
       53,
       innerWidth / innerHeight,
       0.05,
-      800,
+      6000,
     );
   camera.position.set(1.1, 4.2, 14);
   camera.lookAt(1.1, -3.5, -28);
@@ -62,7 +62,7 @@ export async function createLake(container, rocks) {
   bg.renderOrder = -100;
   scene.add(bg);
   const water = new THREE.Mesh(
-    new THREE.PlaneGeometry(700, 700, 1, 1),
+    new THREE.PlaneGeometry(10000, 10000, 1, 1),
     new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
@@ -81,7 +81,11 @@ export async function createLake(container, rocks) {
  // Camera-projected environment capture provides the base radiance. Animated
  // normal-map refraction and specular response shade the actual lake mesh.
  void main(){vec2 p=wp.xz;
+ float range=length(wp.xz-cameraPosition.xz);
  vec2 n=(texture2D(normalMap,p*.12+vec2(time*.014,time*.009)).rg-.5)*1.3+(texture2D(normalMap,p*.21-vec2(time*.008,time*.011)).rg-.5)*.5;
+ // Coarser world-space ripples remain visible as fine waves minify in the distance.
+ vec2 farN=(texture2D(normalMap,p*.018+vec2(time*.007,time*.004)).rg-.5);
+ n=mix(n,farN*1.15,smoothstep(18.,130.,range)*immersion*.75);
  vec2 screen=clip.xy/clip.w*.5+.5;vec2 baseUV=vec2((screen.x-.5)*min(1.,viewport.x/viewport.y/1.596)+.5,(screen.y<.676?screen.y*.961538:.65+(screen.y-.676)*1.080247));
  float waterMask=smoothstep(.01,.22,screen.y)*smoothstep(.10,.42,screen.x+screen.y*.32);float distanceMask=1.-smoothstep(.58,.68,screen.y);
  // Crossing wave trains gently bend the reflected image without moving dry shore.
@@ -92,6 +96,7 @@ export async function createLake(container, rocks) {
  vec3 color=mix(capture,reflection,fresnel*waterMask*.2);
  float sunline=exp(-pow((screen.x-.947+n.x*.1)/(.014+(1.-screen.y)*.04),2.));float sparkle=pow(clamp((n.y+.17)*3.,0.,1.),10.);
  float waveSlope=sin(p.x*2.8+p.y*5.2+time*1.1)*.5+sin(p.x*6.1-p.y*3.7-time*.83)*.25;
+ waveSlope*=mix(1.,1./(1.+length(fwidth(p))*10.),immersion);
  float glint=pow(max(0.,.55+n.y*1.4+waveSlope*.3),14.);
  float glintMask=waterMask*distanceMask;
  color+=vec3(1.,.79,.48)*sunline*min(glint,1.)*.48*glintMask;
@@ -107,16 +112,22 @@ export async function createLake(container, rocks) {
  vec3 skyColor=texture2D(land,skyUV).rgb;
  vec3 lakeColor=mix(vec3(.013,.12,.15),skyColor,.34+facing*.48);
  vec3 halfway=normalize(eye+normalize(vec3(.65,.22,-.35)));
- float spec=pow(max(dot(waveNormal,halfway),0.),180.);
+ float specPower=mix(180.,35.,smoothstep(.03,.6,length(fwidth(p))));
+ float spec=pow(max(dot(waveNormal,halfway),0.),specPower)*(specPower/180.);
  lakeColor+=vec3(1.,.74,.38)*spec*1.2;
  lakeColor+=vec3(1.,.67,.3)*pow(clamp((n.y+.23)*2.6,0.,1.),5.)*sunline*.5;
  lakeColor+=vec3(.05,.11,.12)*(waveSlope*.16+n.y*.25);
- // The distant lake is a screen-fixed capture. A world-distance fade collapses
- // to a thin stripe from this low camera, so blend over a broad screen band.
- // Its upper edge matches the backdrop exactly: no refraction, glints, or tint.
- vec3 plate=mix(texture2D(land,baseUV).rgb,texture2D(resultMap,baseUV).rgb,resultMix);
- float nearWater=1.-smoothstep(.32,.60,screen.y);
- vec3 flightWater=mix(plate,lakeColor,nearWater);
+ // Keep the entire lake animated. Only the last pixels at the distant bank
+ // settle into the photograph; normal-driven reflections continue up to it.
+ float bank=1.-smoothstep(.672,.676,screen.y);
+ float rippleScale=mix(.0045,.0012,smoothstep(15.,240.,range));
+ vec2 flightShift=n*vec2(1.,.65)*rippleScale*bank;
+ vec3 movingReflection=mix(texture2D(land,baseUV+flightShift).rgb,texture2D(resultMap,baseUV+flightShift).rgb,resultMix);
+ // Match the local reflection colors while retaining moving specular detail.
+ float nearDetail=1.-smoothstep(8.,65.,range);
+ vec3 flightWater=mix(movingReflection,lakeColor,nearDetail);
+ flightWater+=vec3(.22,.35,.4)*(n.y*.055+waveSlope*.018)*bank;
+ flightWater+=vec3(1.,.76,.43)*sunline*min(glint,1.)*.22*bank;
  color=mix(color,flightWater,immersion);
  gl_FragColor=vec4(color,1.);\n #include <colorspace_fragment>\n}`,
     }),
@@ -420,23 +431,28 @@ export async function createLake(container, rocks) {
           ),
           cameraBlend,
         );
-      camera.lookAt(
-        shoreLook
-          .clone()
-          .lerp(
-            new THREE.Vector3(
-              p.x + Math.sin(current.input.heading - 0.42) * 16,
-              -1.8,
-              p.z - Math.cos(current.input.heading - 0.42) * 16,
-            ),
-            cameraBlend,
-          ),
+      const flightLook = new THREE.Vector3(
+        p.x + Math.sin(current.input.heading - 0.42) * 16,
+        0,
+        p.z - Math.cos(current.input.heading - 0.42) * 16,
       );
+      const lookPoint = shoreLook.clone().lerp(flightLook, cameraBlend);
+      // Keep water and capture horizons aligned throughout the camera transition.
+      const shoreFov = innerWidth < 760 ? 100 : 53;
+      const shoreHorizon = .5 + (shorePosition.y - shoreLook.y)
+        / Math.hypot(shoreLook.x - shorePosition.x, shoreLook.z - shorePosition.z)
+        / (2 * Math.tan(shoreFov * Math.PI / 360));
+      const horizon = THREE.MathUtils.lerp(shoreHorizon, .676, cameraBlend);
+      lookPoint.y = camera.position.y
+        - Math.hypot(lookPoint.x - camera.position.x, lookPoint.z - camera.position.z)
+        * Math.tan(camera.fov * Math.PI / 360) * (horizon - .5) * 2;
+      camera.lookAt(lookPoint);
     } else {
       camera.position.copy(shorePosition);
       camera.lookAt(shoreLook);
     }
     camera.updateMatrixWorld();
+    water.position.set(camera.position.x, 0, camera.position.z);
     const boatTime = current
       ? current.input.phase + Math.min(playTime, current.duration)
       : targetTime;
